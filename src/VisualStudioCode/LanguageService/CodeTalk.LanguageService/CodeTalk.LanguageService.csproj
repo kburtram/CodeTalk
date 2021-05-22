@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>netcoreapp3.1</TargetFramework>
+		<AssemblyName>CodeTalkLanguageService</AssemblyName>
+		<OutputType>Exe</OutputType>
+		<EnableDefaultItems>false</EnableDefaultItems>
+		<EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+		<EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
+		<EmbeddedResourceUseDependentUponConvention>false</EmbeddedResourceUseDependentUponConvention>
+		<EnableDefaultNoneItems>false</EnableDefaultNoneItems>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<DefineConstants>$(DefineConstants);NETCOREAPP1_0</DefineConstants>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<PreserveCompilationContext>true</PreserveCompilationContext>
+		<RuntimeIdentifiers>win7-x64;win7-x86;ubuntu.14.04-x64;ubuntu.16.04-x64;centos.7-x64;rhel.7.2-x64;debian.8-x64;fedora.23-x64;opensuse.13.2-x64;osx.10.11-x64;linux-x64;win10-arm;win10-arm64</RuntimeIdentifiers>
+	</PropertyGroup>
+	<ItemGroup>
+		<Compile Include="**\*.cs" Exclude="**/obj/**/*.cs" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+		<PackageReference Include="Microsoft.Extensions.DependencyModel" Version="5.0.0" />
+		<PackageReference Include="System.IO.Packaging" Version="4.7.0" />
+		<PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
+		<PackageReference Include="System.Composition" Version="1.4.1" />
+		<PackageReference Include="System.Security.Permissions" Version="4.7.0" />
+		<PackageReference Include="System.Text.Encoding.CodePages" Version="4.7.1" />
+	</ItemGroup>
+	<ItemGroup>
+		<Reference Include="Microsoft.SqlTools.Hosting">
+			<HintPath>..\ref\Microsoft.SqlTools.Hosting.dll</HintPath>
+		</Reference>
+		<Reference Include="Microsoft.SqlTools.LanguageServiceProtocol">
+			<HintPath>..\ref\Microsoft.SqlTools.LanguageServiceProtocol.dll</HintPath>
+		</Reference>		
+	</ItemGroup>
+</Project>
