@@ -243,3 +243,6 @@ ModelManifest.xml
 
 # output files
 **/out/**
+**/*.vsix
+**/sqltoolsservice/*
+**/codetalkservice/*
