@@ -106,5 +106,3 @@ export function getServiceInstallDirectoryRoot(): string {
     directoryPath = directoryPath.replace('/{#version#}/{#platform#}', '');
     return directoryPath;
 }
-
-

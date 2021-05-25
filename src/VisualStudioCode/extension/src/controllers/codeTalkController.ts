@@ -6,7 +6,7 @@
 'use strict';
 import * as events from 'events';
 import vscode = require('vscode');
-import SqlToolsServerClient from '../languageservice/serviceclient';
+import CodeTalkServiceClient from '../languageservice/serviceClient';
 
 /**
  * The main controller class that initializes the extension
@@ -86,7 +86,7 @@ export default class CodeTalkController implements vscode.Disposable {
      */
     public async initialize(): Promise<boolean> {
         // initialize language service client
-        await SqlToolsServerClient.instance.initialize(this._context);
+        await CodeTalkServiceClient.instance.initialize(this._context);
 
         this._initialized = true;
         return true;

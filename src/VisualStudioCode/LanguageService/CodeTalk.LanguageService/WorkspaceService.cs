@@ -134,7 +134,7 @@ namespace Microsoft.SqlTools.ServiceLayer.Workspace
             serviceHost.SetEventHandler(DidChangeConfigurationNotification<TConfig>.Type, HandleDidChangeConfigurationNotification);
             
             // Register an initialization handler that sets the workspace path
-            serviceHost.RegisterInitializeTask(async (parameters, contect) =>
+            serviceHost.RegisterInitializeTask(async (parameters, context) =>
             {
                 Logger.Write(TraceEventType.Verbose, "Initializing workspace service");
 

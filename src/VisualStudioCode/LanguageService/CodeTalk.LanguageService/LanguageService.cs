@@ -7,8 +7,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using CodeTalk.ServiceLayer.Hosting;
 using Microsoft.SqlTools.Hosting.Protocol;
@@ -19,7 +17,7 @@ using Microsoft.SqlTools.Utility;
 using Microsoft.SqlTools.Workspace.Contracts;
 using Location = Microsoft.SqlTools.Workspace.Contracts.Location;
 
-namespace Microsoft.SqlTools.ServiceLayer.LanguageServices
+namespace CodeTalk.LanguageService
 {
     /// <summary>
     /// Main class for Language Service functionality including anything that requires knowledge of
@@ -138,7 +136,7 @@ namespace Microsoft.SqlTools.ServiceLayer.LanguageServices
         /// <summary>
         /// Gets the current workspace instance
         /// </summary>
-        internal Workspace.Workspace CurrentWorkspace
+        internal Workspace CurrentWorkspace
         {
             get { return WorkspaceServiceInstance.Workspace; }
         }
@@ -161,11 +159,6 @@ namespace Microsoft.SqlTools.ServiceLayer.LanguageServices
         public void InitializeService(ServiceHost serviceHost, SqlToolsContext context)
         {
             // Register the requests that this service will handle
-
-            // turn off until needed (10/28/2016)
-            // serviceHost.SetRequestHandler(ReferencesRequest.Type, HandleReferencesRequest);
-            // serviceHost.SetRequestHandler(DocumentHighlightRequest.Type, HandleDocumentHighlightRequest);
-
             serviceHost.SetRequestHandler(SignatureHelpRequest.Type, HandleSignatureHelpRequest);
             serviceHost.SetRequestHandler(CompletionResolveRequest.Type, HandleCompletionResolveRequest);
             serviceHost.SetRequestHandler(HoverRequest.Type, HandleHoverRequest);

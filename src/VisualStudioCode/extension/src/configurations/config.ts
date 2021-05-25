@@ -45,13 +45,7 @@ export default class Config implements IConfig {
     }
 
     public useServiceVersion(version: number): void {
-        switch (version) {
-            case 1:
-                this._sqlToolsServiceConfigKey = 'v1Service';
-                break;
-            default:
-                this._sqlToolsServiceConfigKey = 'service';
-        }
+        this._sqlToolsServiceConfigKey = 'service';
         this.version = version;
     }
 

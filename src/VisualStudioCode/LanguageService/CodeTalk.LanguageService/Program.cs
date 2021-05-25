@@ -5,6 +5,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using CodeTalk.ServiceLayer.Hosting;
 using Microsoft.SqlTools.Hosting.Utility;
 using Microsoft.SqlTools.ServiceLayer.SqlContext;
 using Microsoft.SqlTools.Utility;
@@ -49,7 +50,7 @@ namespace CodeTalk.LanguageService
                     version: new Version(1, 0));
 
                 SqlToolsContext sqlToolsContext = new SqlToolsContext(hostDetails);
-                UtilityServiceHost serviceHost = HostLoader.CreateAndStartServiceHost(sqlToolsContext);
+                ServiceHost serviceHost = HostLoader.CreateAndStartServiceHost(sqlToolsContext);
 
                 serviceHost.WaitForExit();
             }

@@ -20,7 +20,7 @@ import { PlatformInformation } from '../models/platform';
 import { ServerInitializationResult, ServerStatusView } from './serverStatus';
 import StatusView from '../controllers/statusView';
 import * as LanguageServiceContracts from '../models/contracts/languageService';
-import { IConfig } from '../languageservice/interfaces';
+import { IConfig } from './interfaces';
 
 let _channel: vscode.OutputChannel = undefined;
 
@@ -214,43 +214,12 @@ export default class CodeTalkServiceClient {
         return this._config.getServiceVersion();
     }
 
-    /**
-     * Initializes the SQL language configuration
-     *
-     * @memberOf CodeTalkServiceClient
-     */
-    private initializeLanguageConfiguration(): void {
-        vscode.languages.setLanguageConfiguration('sql', {
-            comments: {
-                lineComment: '--',
-                blockComment: ['/*', '*/']
-            },
-
-            brackets: [
-                ['{', '}'],
-                ['[', ']'],
-                ['(', ')']
-            ],
-
-            __characterPairSupport: {
-                autoClosingPairs: [
-                    { open: '{', close: '}' },
-                    { open: '[', close: ']' },
-                    { open: '(', close: ')' },
-                    { open: '"', close: '"', notIn: ['string'] },
-                    { open: '\'', close: '\'', notIn: ['string', 'comment'] }
-                ]
-            }
-        });
-    }
-
     private initializeLanguageClient(serverPath: string, context: vscode.ExtensionContext, isWindows: boolean): void {
         if (serverPath === undefined) {
             Utils.logDebug('Invalid service path');
             throw new Error('Invalid service path');
         } else {
             let self = this;
-            self.initializeLanguageConfiguration();
             let serverOptions: ServerOptions = this.createServerOptions(serverPath);
             this.client = this.createLanguageClient(serverOptions);
 
@@ -268,10 +237,13 @@ export default class CodeTalkServiceClient {
     private createLanguageClient(serverOptions: ServerOptions): LanguageClient {
         // Options to control the language client
         let clientOptions: LanguageClientOptions = {
-            documentSelector: ['sql'],
-            diagnosticCollectionName: 'mssql',
+            documentSelector: [ {
+                language: 'csharp',
+                scheme: 'file'
+            }],
+            diagnosticCollectionName: 'codetalk',
             synchronize: {
-                configurationSection: 'mssql'
+                configurationSection: 'codetalk'
             },
             errorHandler: new LanguageClientErrorHandler()
         };

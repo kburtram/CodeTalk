@@ -2,13 +2,15 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using CodeTalk.ServiceLayer.Hosting;
 using Microsoft.SqlTools.Extensibility;
 using Microsoft.SqlTools.Hosting;
 using Microsoft.SqlTools.Hosting.Protocol;
 using Microsoft.SqlTools.ServiceLayer.SqlContext;
+using Microsoft.SqlTools.ServiceLayer.Workspace;
 using Microsoft.SqlTools.Utility;
 
-namespace  CodeTalk.LanguageService
+namespace CodeTalk.LanguageService
 {
     /// <summary>
     /// Provides support for starting up a service host. This is a common responsibility
@@ -19,9 +21,9 @@ namespace  CodeTalk.LanguageService
         private static object lockObject = new object();
         private static bool isLoaded;
 
-        internal static UtilityServiceHost CreateAndStartServiceHost(SqlToolsContext sqlToolsContext)
+        internal static ServiceHost CreateAndStartServiceHost(SqlToolsContext sqlToolsContext)
         {
-            UtilityServiceHost serviceHost = UtilityServiceHost.Instance;
+            ServiceHost serviceHost = ServiceHost.Instance;
             lock (lockObject)
             {
                 if (!isLoaded)
@@ -41,7 +43,7 @@ namespace  CodeTalk.LanguageService
             return serviceHost;
         }
 
-        private static void InitializeRequestHandlersAndServices(UtilityServiceHost serviceHost, SqlToolsContext sqlToolsContext)
+        private static void InitializeRequestHandlersAndServices(ServiceHost serviceHost, SqlToolsContext sqlToolsContext)
         {
             // Load extension provider, which currently finds all exports in current DLL. Can be changed to find based
             // on directory or assembly list quite easily in the future
@@ -52,8 +54,14 @@ namespace  CodeTalk.LanguageService
             serviceProvider.RegisterSingleService(sqlToolsContext);
             serviceProvider.RegisterSingleService(serviceHost);
 
-            //CredentialService.Instance.InitializeService(serviceHost);
-            //serviceProvider.RegisterSingleService(CredentialService.Instance);
+            // Initialize and register singleton services so they're accessible for any MEF service. In the future, these
+            // could be updated to be IComposableServices, which would avoid the requirement to define a singleton instance
+            // and instead have MEF handle discovery & loading
+            WorkspaceService<SqlToolsSettings>.Instance.InitializeService(serviceHost);
+            serviceProvider.RegisterSingleService(WorkspaceService<SqlToolsSettings>.Instance);
+
+            CodeTalk.LanguageService.LanguageService.Instance.InitializeService(serviceHost, sqlToolsContext);
+            serviceProvider.RegisterSingleService(LanguageService.Instance);
 
             InitializeHostedServices(serviceProvider, serviceHost);
 
