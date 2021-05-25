@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using CodeTalk.LanguageService.Contracts;
 using Microsoft.SqlTools.Hosting.Protocol;
 using Microsoft.SqlTools.LanguageServices.Contracts;
 using Microsoft.SqlTools.ServiceLayer.SqlContext;
@@ -131,6 +132,9 @@ namespace CodeTalk.LanguageService
             serviceHost.SetRequestHandler(DefinitionRequest.Type, HandleDefinitionRequest);
             serviceHost.SetRequestHandler(SyntaxParseRequest.Type, HandleSyntaxParseRequest);
 
+
+            serviceHost.SetRequestHandler(FunctionListRequest.Type, HandleFunctionListRequest);
+
             // Register a no-op shutdown task for validation of the shutdown logic
             serviceHost.RegisterShutdownTask(async (shutdownParams, shutdownRequestContext) =>
             {
@@ -173,6 +177,17 @@ namespace CodeTalk.LanguageService
             await Task.Run(() =>
             {               
             });
+        }
+
+        /// <summary>
+        /// Function list command handlers
+        /// </summary>
+        /// <param name="param"></param>
+        /// <param name="requestContext"></param>
+        /// <returns></returns>
+        internal async Task HandleFunctionListRequest(FunctionListParams param, RequestContext<FunctionList> requestContext)
+        {
+            await requestContext.SendResult(null);
         }
 
         /// <summary>

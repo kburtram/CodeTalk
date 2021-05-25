@@ -19,16 +19,12 @@ using Microsoft.SqlTools.Utility;
 namespace CodeTalk.LanguageService
 {
     /// <summary>
-    /// SQL Tools VS Code Language Server request handler. Provides the entire JSON RPC
+    /// Code Talk VS Code Language Server request handler. Provides the entire JSON RPC
     /// implementation for sending/receiving JSON requests and dispatching the requests to
     /// handlers that are registered prior to startup.
     /// </summary>
     public sealed class ServiceHost : ServiceHostBase
     {
-        public const string ProviderName = "CODETALK";
-        private const string ProviderDescription = "Code Talk";
-        private const string ProviderProtocolVersion = "1.0";
-
         /// <summary>
         /// This timeout limits the amount of time that shutdown tasks can take to complete
         /// prior to the process shutting down.
@@ -82,9 +78,7 @@ namespace CodeTalk.LanguageService
         {
             // Register the requests that this service host will handle
             this.SetRequestHandler(InitializeRequest.Type, HandleInitializeRequest);
-            // this.SetRequestHandler(CapabilitiesRequest.Type, HandleCapabilitiesRequest);
             this.SetRequestHandler(ShutdownRequest.Type, HandleShutdownRequest);
-            this.SetRequestHandler(VersionRequest.Type, HandleVersionRequest);
         }
 
         #endregion
@@ -189,39 +183,6 @@ namespace CodeTalk.LanguageService
                         }
                     }
                 });
-        }
-
-        // /// <summary>
-        // /// Handles a request for the capabilities request
-        // /// </summary>
-        // internal async Task HandleCapabilitiesRequest(
-        //     CapabilitiesRequest initializeParams, 
-        //     RequestContext<CapabilitiesResult> requestContext)            
-        // {
-        //     await requestContext.SendResult(
-        //         new CapabilitiesResult
-        //         {
-        //             Capabilities = new DmpServerCapabilities
-        //             {
-        //                 ProtocolVersion = ServiceHost.ProviderProtocolVersion,
-        //                 ProviderName = ServiceHost.ProviderName,
-        //                 ProviderDisplayName = ServiceHost.ProviderDescription,
-        //                 ConnectionProvider = ConnectionProviderOptionsHelper.BuildConnectionProviderOptions(),
-        //                 AdminServicesProvider = AdminServicesProviderOptionsHelper.BuildAdminServicesProviderOptions(),
-        //                 Features = FeaturesMetadataProviderHelper.CreateFeatureMetadataProviders()
-        //             }
-        //         }
-        //     );            
-        // }
-
-        /// <summary>
-        /// Handles the version request. Sends back the server version as result.
-        /// </summary>
-        private static async Task HandleVersionRequest(
-          object versionRequestParams,
-          RequestContext<string> requestContext)
-        {
-            await requestContext.SendResult(serviceVersion.ToString());
         }
 
         #endregion
