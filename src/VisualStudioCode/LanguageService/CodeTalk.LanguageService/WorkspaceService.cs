@@ -9,13 +9,12 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using CodeTalk.ServiceLayer.Hosting;
 using Microsoft.SqlTools.Hosting.Protocol;
 using Microsoft.SqlTools.Utility;
 using Microsoft.SqlTools.Workspace.Contracts;
 using Range = Microsoft.SqlTools.Workspace.Contracts.Range;
 
-namespace Microsoft.SqlTools.ServiceLayer.Workspace
+namespace CodeTalk.LanguageService
 {
     /// <summary>
     /// Class for handling requests/events that deal with the state of the workspace, including the

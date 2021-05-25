@@ -3,8 +3,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 //
 
-
-namespace Microsoft.SqlTools.ServiceLayer.Utility
+namespace CodeTalk.LanguageService
 {
     /// <summary>
     /// Utility object holding a result of a file resolve action.

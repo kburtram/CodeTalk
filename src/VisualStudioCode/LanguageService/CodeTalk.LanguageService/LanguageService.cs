@@ -4,15 +4,12 @@
 //
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using CodeTalk.ServiceLayer.Hosting;
 using Microsoft.SqlTools.Hosting.Protocol;
 using Microsoft.SqlTools.LanguageServices.Contracts;
 using Microsoft.SqlTools.ServiceLayer.SqlContext;
-using Microsoft.SqlTools.ServiceLayer.Workspace;
 using Microsoft.SqlTools.Utility;
 using Microsoft.SqlTools.Workspace.Contracts;
 using Location = Microsoft.SqlTools.Workspace.Contracts.Location;
@@ -41,41 +38,9 @@ namespace CodeTalk.LanguageService
 
         #region Instance fields and constructor
 
-        public const string SQL_LANG = "SQL";
-
-        public const string SQL_CMD_LANG = "SQLCMD";
-
-        private const int OneSecond = 1000;
-
-        private const int PrepopulateBindTimeout = 60000;
-
-        internal const string DefaultBatchSeperator = "GO";
-
-        internal const int DiagnosticParseDelay = 750;
-
-        internal const int HoverTimeout = 500;
-
-        internal const int BindingTimeout = 500;
-
-        internal const int OnConnectionWaitTimeout = 300 * OneSecond;
-
-        internal const int PeekDefinitionTimeout = 10 * OneSecond;
-
-        internal const int ExtensionLoadingTimeout = 10 * OneSecond;
-
-        internal const int CompletionExtTimeout = 200;
-
-        // For testability only
-        internal Task DelayedDiagnosticsTask = null;
-
-        private WorkspaceService<SqlToolsSettings> workspaceServiceInstance;
+        private WorkspaceService<CodeTalkSettings> workspaceServiceInstance;
 
         private ServiceHost serviceHostInstance;
-
-        private object parseMapLock = new object();
-
-        private ConcurrentDictionary<string, bool> nonMssqlUriMap = new ConcurrentDictionary<string, bool>();
-
 
         /// <summary>
         /// Default, parameterless constructor.
@@ -93,13 +58,13 @@ namespace CodeTalk.LanguageService
         /// Gets or sets the current workspace service instance
         /// Setter for internal testing purposes only
         /// </summary>
-        internal WorkspaceService<SqlToolsSettings> WorkspaceServiceInstance
+        internal WorkspaceService<CodeTalkSettings> WorkspaceServiceInstance
         {
             get
             {
                 if (workspaceServiceInstance == null)
                 {
-                    workspaceServiceInstance =  WorkspaceService<SqlToolsSettings>.Instance;
+                    workspaceServiceInstance =  WorkspaceService<CodeTalkSettings>.Instance;
                 }
                 return workspaceServiceInstance;
             }
@@ -128,7 +93,7 @@ namespace CodeTalk.LanguageService
         /// <summary>
         /// Gets the current settings
         /// </summary>
-        internal SqlToolsSettings CurrentWorkspaceSettings
+        internal CodeTalkSettings CurrentWorkspaceSettings
         {
             get { return WorkspaceServiceInstance.CurrentSettings; }
         }
@@ -206,30 +171,7 @@ namespace CodeTalk.LanguageService
         internal async Task HandleSyntaxParseRequest(SyntaxParseParams param, RequestContext<SyntaxParseResult> requestContext)
         {
             await Task.Run(() =>
-            {
-                // try
-                // {
-                //     ParseResult result = Parser.Parse(param.Query);
-                //     SyntaxParseResult syntaxResult = new SyntaxParseResult();
-                //     if (result != null && result.Errors.Count() == 0)
-                //     {
-                //         syntaxResult.Parseable = true;
-                //     } else
-                //     {
-                //         syntaxResult.Parseable = false;
-                //         string[] errorMessages = new string[result.Errors.Count()];
-                //         for (int i = 0; i < result.Errors.Count(); i++)
-                //         {
-                //             errorMessages[i] = result.Errors.ElementAt(i).Message;
-                //         }
-                //         syntaxResult.Errors = errorMessages;
-                //     }
-                //     await requestContext.SendResult(syntaxResult);
-                // }
-                // catch (Exception ex)
-                // {
-                //     await requestContext.SendError(ex.ToString());
-                // }
+            {               
             });
         }
 
@@ -251,23 +193,8 @@ namespace CodeTalk.LanguageService
                     await requestContext.SendResult(null);
                     return;
                 }
-                // check if Intellisense suggestions are enabled
-                // if (ShouldSkipIntellisense(scriptFile.ClientUri))
-                // {
-                //     await requestContext.SendResult(null);
-                // }
-                // else
-                {
-                    // // get the current list of completion items and return to client
-                    // ConnectionServiceInstance.TryFindConnection(
-                    //     scriptFile.ClientUri,
-                    //     // out ConnectionInfo connInfo);
-
-                    // var completionItems = await GetCompletionItems(
-                    //     textDocumentPosition, scriptFile, null);
-
-                    await requestContext.SendResult(null);
-                }
+   
+                await requestContext.SendResult(null);
             }
             catch (Exception ex)
             {
@@ -298,49 +225,7 @@ namespace CodeTalk.LanguageService
 
         internal async Task HandleDefinitionRequest(TextDocumentPosition textDocumentPosition, RequestContext<Location[]> requestContext)
         {
-            await requestContext.SendError("not implemented");
-            // try
-            // {
-            //     DocumentStatusHelper.SendStatusChange(requestContext, textDocumentPosition, DocumentStatusHelper.DefinitionRequested);
-
-            //     if (!ShouldSkipIntellisense(textDocumentPosition.TextDocument.Uri))
-            //     {
-            //         // Retrieve document and connection
-            //         ConnectionInfo connInfo;
-            //         var scriptFile = CurrentWorkspace.GetFile(textDocumentPosition.TextDocument.Uri);
-            //         bool isConnected = false;
-            //         bool succeeded = false;
-            //         DefinitionResult definitionResult = null;
-            //         if (scriptFile != null)
-            //         {
-            //             isConnected = ConnectionServiceInstance.TryFindConnection(scriptFile.ClientUri, out connInfo);
-            //             definitionResult = GetDefinition(textDocumentPosition, scriptFile, connInfo);
-            //         }
-
-            //         if (definitionResult != null && !definitionResult.IsErrorResult)
-            //         {
-            //             await requestContext.SendResult(definitionResult.Locations);
-            //             succeeded = true;
-            //         }
-            //         else
-            //         {
-            //             await requestContext.SendResult(Array.Empty<Location>());
-            //         }
-
-            //         DocumentStatusHelper.SendTelemetryEvent(requestContext, CreatePeekTelemetryProps(succeeded, isConnected));
-            //     }
-            //     else
-            //     {
-            //         // Send an empty result so that processing does not hang when peek def service called from non-mssql clients
-            //         await requestContext.SendResult(Array.Empty<Location>());
-            //     }
-
-            //     DocumentStatusHelper.SendStatusChange(requestContext, textDocumentPosition, DocumentStatusHelper.DefinitionRequestCompleted);
-            // }
-            // catch (Exception ex)
-            // {
-            //     await requestContext.SendError(ex.ToString());
-            // }
+            await requestContext.SendError("not implemented");            
         }
 
         private static TelemetryProperties CreatePeekTelemetryProps(bool succeeded, bool connected)
@@ -362,29 +247,8 @@ namespace CodeTalk.LanguageService
         {
             try
             {
-                // check if Intellisense suggestions are enabled
-                //if (ShouldSkipNonMssqlFile(textDocumentPosition))
-                {
-                    await requestContext.SendResult(null);
-                }
-                // else
-                // {
-                //     ScriptFile scriptFile = CurrentWorkspace.GetFile(
-                //         textDocumentPosition.TextDocument.Uri);
-                //     SignatureHelp help = null;
-                //     if (scriptFile != null)
-                //     {
-                //         help = GetSignatureHelp(textDocumentPosition, scriptFile);
-                //     }
-                //     if (help != null)
-                //     {
-                //         await requestContext.SendResult(help);
-                //     }
-                //     else
-                //     {
-                //         await requestContext.SendResult(new SignatureHelp());
-                //     }
-                // }
+               
+                await requestContext.SendResult(null);              
             }
             catch (Exception ex)
             {
@@ -399,21 +263,9 @@ namespace CodeTalk.LanguageService
             try
             {
                 // check if Quick Info hover tooltips are enabled
-                // if (CurrentWorkspaceSettings.IsQuickInfoEnabled
-                //     && !ShouldSkipNonMssqlFile(textDocumentPosition))
                 {
                     var scriptFile = CurrentWorkspace.GetFile(
                         textDocumentPosition.TextDocument.Uri);
-
-                    // Hover hover = null;
-                    // if (scriptFile != null)
-                    // {
-                    //     hover = GetHoverItem(textDocumentPosition, scriptFile);
-                    // }
-                    // if (hover != null)
-                    // {
-                    //     await requestContext.SendResult(hover);
-                    // }
                 }
                 await requestContext.SendResult(null);
             }
@@ -441,15 +293,6 @@ namespace CodeTalk.LanguageService
         {
             try
             {
-                // if not in the preview window and diagnostics are enabled then run diagnostics
-                // if (!IsPreviewWindow(scriptFile)
-                //     && CurrentWorkspaceSettings.IsDiagnosticsEnabled)
-                // {
-                //     await RunScriptDiagnostics(
-                //         new ScriptFile[] { scriptFile },
-                //         eventContext);
-                // }
-
                 await Task.FromResult(true);
             }
             catch (Exception ex)
@@ -468,14 +311,6 @@ namespace CodeTalk.LanguageService
         {
             try
             {
-                // if (CurrentWorkspaceSettings.IsDiagnosticsEnabled)
-                // {
-                //     // Only process files that are MSSQL flavor
-                //     await this.RunScriptDiagnostics(
-                //         changedFiles.ToArray(),
-                //         eventContext);
-                // }
-
                 await Task.FromResult(true);
             }
             catch (Exception ex)
@@ -496,22 +331,8 @@ namespace CodeTalk.LanguageService
             string uri,
             ScriptFile scriptFile,
             EventContext eventContext)
-        {  
-            await Task.Run(() => {});          
-            // try
-            // {
-            //     // if not in the preview window and diagnostics are enabled then clear diagnostics
-            //     if (!IsPreviewWindow(scriptFile)
-            //         && CurrentWorkspaceSettings.IsDiagnosticsEnabled)
-            //     {
-            //         await DiagnosticsHelper.ClearScriptDiagnostics(uri, eventContext);
-            //     }
-            // }
-            // catch (Exception ex)
-            // {
-            //     Logger.Write(TraceEventType.Error, "Unknown error " + ex.ToString());
-            //     // TODO: need mechanism return errors from event handlers
-            // }
+        {
+            await Task.Run(() => {});
         }
 
         /// <summary>
@@ -521,45 +342,11 @@ namespace CodeTalk.LanguageService
         /// <param name="oldSettings"></param>
         /// <param name="eventContext"></param>
         public async Task HandleDidChangeConfigurationNotification(
-            SqlToolsSettings newSettings,
-            SqlToolsSettings oldSettings,
+            CodeTalkSettings newSettings,
+            CodeTalkSettings oldSettings,
             EventContext eventContext)
         {
             await Task.Run(() => {});
-            // try
-            // {
-            //     bool oldEnableIntelliSense = oldSettings.SqlTools.IntelliSense.EnableIntellisense;
-            //     bool oldAlwaysEncryptedParameterizationEnabled = oldSettings.SqlTools.QueryExecutionSettings.IsAlwaysEncryptedParameterizationEnabled;
-            //     bool? oldEnableDiagnostics = oldSettings.SqlTools.IntelliSense.EnableErrorChecking;
-
-            //     // update the current settings to reflect any changes
-            //     CurrentWorkspaceSettings.Update(newSettings);
-
-            //     // if script analysis settings have changed we need to clear the current diagnostic markers
-            //     if (oldEnableIntelliSense != newSettings.SqlTools.IntelliSense.EnableIntellisense
-            //         || oldEnableDiagnostics != newSettings.SqlTools.IntelliSense.EnableErrorChecking
-            //         || oldAlwaysEncryptedParameterizationEnabled != newSettings.SqlTools.QueryExecutionSettings.IsAlwaysEncryptedParameterizationEnabled)
-            //     {
-            //         // if the user just turned off diagnostics then send an event to clear the error markers
-            //         if (!newSettings.IsDiagnosticsEnabled)
-            //         {
-            //             foreach (var scriptFile in CurrentWorkspace.GetOpenedFiles())
-            //             {
-            //                 await DiagnosticsHelper.ClearScriptDiagnostics(scriptFile.ClientUri, eventContext);
-            //             }
-            //         }
-            //         // otherwise rerun diagnostic analysis on all opened SQL files
-            //         else
-            //         {
-            //             await RunScriptDiagnostics(CurrentWorkspace.GetOpenedFiles(), eventContext);
-            //         }
-            //     }
-            // }
-            // catch (Exception ex)
-            // {
-            //     Logger.Write(TraceEventType.Error, "Unknown error " + ex.ToString());
-            //     // TODO: need mechanism return errors from event handlers
-            // }
         }
 
         #endregion

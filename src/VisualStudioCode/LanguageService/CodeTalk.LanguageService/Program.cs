@@ -4,8 +4,6 @@
 
 using System;
 using System.Diagnostics;
-using System.IO;
-using CodeTalk.ServiceLayer.Hosting;
 using Microsoft.SqlTools.Hosting.Utility;
 using Microsoft.SqlTools.ServiceLayer.SqlContext;
 using Microsoft.SqlTools.Utility;

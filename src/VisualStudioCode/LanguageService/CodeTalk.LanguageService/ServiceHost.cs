@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -14,9 +15,8 @@ using Microsoft.SqlTools.Hosting.Contracts;
 using Microsoft.SqlTools.Hosting.Protocol;
 using Microsoft.SqlTools.Hosting.Protocol.Channel;
 using Microsoft.SqlTools.Utility;
-using System.Diagnostics;
 
-namespace CodeTalk.ServiceLayer.Hosting
+namespace CodeTalk.LanguageService
 {
     /// <summary>
     /// SQL Tools VS Code Language Server request handler. Provides the entire JSON RPC

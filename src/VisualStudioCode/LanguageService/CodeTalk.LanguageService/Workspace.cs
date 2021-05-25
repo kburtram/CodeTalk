@@ -5,17 +5,16 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Linq;
-using Microsoft.SqlTools.Utility;
 using System.Runtime.InteropServices;
-using System.Diagnostics;
+using Microsoft.SqlTools.Utility;
 using Microsoft.SqlTools.Workspace.Contracts;
-using Microsoft.SqlTools.ServiceLayer.Utility;
 
-namespace Microsoft.SqlTools.ServiceLayer.Workspace
+namespace CodeTalk.LanguageService
 {
     /// <summary>
     /// Manages a "workspace" of script files that are open for a particular
@@ -29,8 +28,7 @@ namespace Microsoft.SqlTools.ServiceLayer.Workspace
         private static readonly HashSet<string> fileUriSchemes = new HashSet<string>(StringComparer.OrdinalIgnoreCase) 
         {
             "file",
-            UntitledScheme,
-            "tsqloutput"
+            UntitledScheme
         };
 
         private Dictionary<string, ScriptFile> workspaceFiles = new Dictionary<string, ScriptFile>();
@@ -182,7 +180,7 @@ namespace Microsoft.SqlTools.ServiceLayer.Workspace
                 }
 
                 // Get the absolute file path
-                ResolvedFile resolvedFile = FileUtilities.TryGetFullPath(filePath, clientUri);
+                ResolvedFile resolvedFile = TryGetFullPath(filePath, clientUri);
                 filePath = resolvedFile.FilePath;
                 canReadFromDisk = resolvedFile.CanReadFromDisk;
             }
@@ -191,6 +189,26 @@ namespace Microsoft.SqlTools.ServiceLayer.Workspace
 
             return new ResolvedFile(filePath, clientUri, canReadFromDisk);
         }
+
+        /// <summary>
+        /// Attempts to resolve the given filePath to an absolute path to a file on disk, 
+        /// defaulting to the original filePath if that fails. 
+        /// </summary>
+        /// <param name="filePath">The file path to resolve</param>
+        /// <param name="clientUri">The full file path URI used by the client</param>
+        /// <returns></returns>
+        internal static ResolvedFile TryGetFullPath(string filePath, string clientUri)
+        {
+            try
+            {
+                return new ResolvedFile(Path.GetFullPath(filePath), clientUri, true);
+            }
+            catch(NotSupportedException)
+            {
+                // This is not a standard path. 
+                return new ResolvedFile(filePath, clientUri, false);
+            }
+        }     
         
         /// <summary>
         /// Unescapes any escaped [, ] or space characters. Typically use this before calling a
