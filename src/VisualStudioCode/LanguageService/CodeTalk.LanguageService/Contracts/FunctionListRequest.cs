@@ -12,7 +12,7 @@ namespace CodeTalk.LanguageService.Contracts
         public string OwnerUri { get; set; }
     }
 
-    public class FunctionList
+    public class FunctionListResult
     {
         public bool Success { get; set; }
     }
@@ -20,7 +20,7 @@ namespace CodeTalk.LanguageService.Contracts
     public class FunctionListRequest
     {
         public static readonly
-            RequestType<FunctionListParams, FunctionList> Type =
-                RequestType<FunctionListParams, FunctionList>.Create("codetalk/functionlist");
+            RequestType<FunctionListParams, FunctionListResult> Type =
+                RequestType<FunctionListParams, FunctionListResult>.Create("codetalk/functionlist");
     }
 }

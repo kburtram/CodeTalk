@@ -6,8 +6,10 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using CodeTalk.LanguageService.Contracts;
+using Microsoft.CodeTalk.LanguageService;
 using Microsoft.SqlTools.Hosting.Protocol;
 using Microsoft.SqlTools.LanguageServices.Contracts;
 using Microsoft.SqlTools.ServiceLayer.SqlContext;
@@ -132,7 +134,6 @@ namespace CodeTalk.LanguageService
             serviceHost.SetRequestHandler(DefinitionRequest.Type, HandleDefinitionRequest);
             serviceHost.SetRequestHandler(SyntaxParseRequest.Type, HandleSyntaxParseRequest);
 
-
             serviceHost.SetRequestHandler(FunctionListRequest.Type, HandleFunctionListRequest);
 
             // Register a no-op shutdown task for validation of the shutdown logic
@@ -185,9 +186,41 @@ namespace CodeTalk.LanguageService
         /// <param name="param"></param>
         /// <param name="requestContext"></param>
         /// <returns></returns>
-        internal async Task HandleFunctionListRequest(FunctionListParams param, RequestContext<FunctionList> requestContext)
+        internal async Task HandleFunctionListRequest(FunctionListParams param, RequestContext<FunctionListResult> requestContext)
         {
-            await requestContext.SendResult(null);
+            var scriptFile = CurrentWorkspace.GetFile(param.OwnerUri);
+            if (scriptFile == null)
+            {
+                await requestContext.SendResult(new FunctionListResult{ Success = false });
+                return;
+            }
+
+            var content = scriptFile.Contents;
+
+            var language = new CSharp();
+            CodeFile codeFile = null;
+            try
+            {
+                //Parsing the code
+                codeFile = language.Parse(content, param.OwnerUri);
+            }
+            catch (Exception)
+            {               
+                return;
+            }
+
+            //Creating a function collector for getting all the functions
+            var functionCollector = new FunctionCollector();
+            functionCollector.VisitCodeFile(codeFile);
+
+            //Getting all the functions
+            var functions = functionCollector.FunctionsInFile;
+            if (0 == functions.Count())
+            {               
+                return;
+            }          
+
+            await requestContext.SendResult(new FunctionListResult{ Success = true });
         }
 
         /// <summary>
@@ -241,19 +274,6 @@ namespace CodeTalk.LanguageService
         internal async Task HandleDefinitionRequest(TextDocumentPosition textDocumentPosition, RequestContext<Location[]> requestContext)
         {
             await requestContext.SendError("not implemented");            
-        }
-
-        private static TelemetryProperties CreatePeekTelemetryProps(bool succeeded, bool connected)
-        {
-            return new TelemetryProperties
-            {
-                Properties = new Dictionary<string, string>
-                {
-                    { TelemetryPropertyNames.Succeeded, succeeded.ToOneOrZeroString() },
-                    { TelemetryPropertyNames.Connected, connected.ToOneOrZeroString() }
-                },
-                EventName = TelemetryEventNames.PeekDefinitionRequested
-            };
         }
 
         internal async Task HandleSignatureHelpRequest(

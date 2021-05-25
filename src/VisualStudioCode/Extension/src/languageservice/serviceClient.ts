@@ -105,11 +105,11 @@ export default class CodeTalkServiceClient {
     private _client: LanguageClient = undefined;
 
     // getter method for the Language Client
-    private get client(): LanguageClient {
+    public get client(): LanguageClient {
         return this._client;
     }
 
-    private set client(client: LanguageClient) {
+    public set client(client: LanguageClient) {
         this._client = client;
     }
 
@@ -251,19 +251,10 @@ export default class CodeTalkServiceClient {
         // cache the client instance for later use
         let client = new LanguageClient('CodeTalkLanguageService', serverOptions, clientOptions);
         client.onReady().then(() => {
-            client.onNotification(LanguageServiceContracts.StatusChangedNotification.type, this.handleLanguageServiceStatusNotification());
+            //client.onNotification(LanguageServiceContracts.StatusChangedNotification.type, this.handleLanguageServiceStatusNotification());
         });
 
         return client;
-    }
-
-    /**
-     * Public for testing purposes only.
-     */
-    public handleLanguageServiceStatusNotification(): NotificationHandler<LanguageServiceContracts.StatusChangeParams> {
-        return (event: LanguageServiceContracts.StatusChangeParams): void => {
-            this._statusView.languageServiceStatusChanged(event.ownerUri, event.status);
-        };
     }
 
     private createServerOptions(servicePath): ServerOptions {

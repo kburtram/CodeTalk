@@ -7,6 +7,7 @@
 import * as events from 'events';
 import vscode = require('vscode');
 import CodeTalkServiceClient from '../languageservice/serviceClient';
+import { FunctionListRequest, FunctionListParams, FunctionListResult } from '../models/contracts/languageService';
 
 /**
  * The main controller class that initializes the extension
@@ -65,14 +66,8 @@ export default class CodeTalkController implements vscode.Disposable {
             // register VS Code commands
             this.registerCommand('codeTalk.showFunctions');
             this._event.on('codeTalk.showFunctions', () => {
-                vscode.window.showInformationMessage('Show Function command run');
+                this.handleShowFunctions();
             });
-
-            // Add handlers for VS Code generated commands
-            // this._vscodeWrapper.onDidCloseTextDocument(async (params) => await this.onDidCloseTextDocument(params));
-            // this._vscodeWrapper.onDidOpenTextDocument(params => this.onDidOpenTextDocument(params));
-            // this._vscodeWrapper.onDidSaveTextDocument(params => this.onDidSaveTextDocument(params));
-            // this._vscodeWrapper.onDidChangeConfiguration(params => this.onDidChangeConfiguration(params));
             return true;
         }
     }
@@ -90,5 +85,23 @@ export default class CodeTalkController implements vscode.Disposable {
 
         this._initialized = true;
         return true;
+    }
+
+    private async handleShowFunctions(): Promise<boolean> {
+        let ownerUri: string = this.getActiveTextEditorUri();
+        let params: FunctionListParams = { ownerUri: ownerUri };
+        const result = await CodeTalkServiceClient.instance.client.sendRequest(FunctionListRequest.type, params);
+        return result.success;
+    }
+
+    /**
+     * Get the URI string for the current active text editor
+     */
+     private  getActiveTextEditorUri(): string {
+        if (typeof vscode.window.activeTextEditor !== 'undefined' &&
+            typeof vscode.window.activeTextEditor.document !== 'undefined') {
+            return vscode.window.activeTextEditor.document.uri.toString(true);
+        }
+        return undefined;
     }
 }
