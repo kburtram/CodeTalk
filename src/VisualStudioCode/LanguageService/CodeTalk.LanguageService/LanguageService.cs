@@ -196,7 +196,6 @@ namespace CodeTalk.LanguageService
             }
 
             var content = scriptFile.Contents;
-
             var language = new CSharp();
             CodeFile codeFile = null;
             try
@@ -209,18 +208,31 @@ namespace CodeTalk.LanguageService
                 return;
             }
 
-            //Creating a function collector for getting all the functions
+            // Creating a function collector for getting all the functions
             var functionCollector = new FunctionCollector();
             functionCollector.VisitCodeFile(codeFile);
 
-            //Getting all the functions
+            // Getting all the functions
+            FunctionListResult result = new FunctionListResult() { Success = false };
             var functions = functionCollector.FunctionsInFile;
-            if (0 == functions.Count())
-            {               
-                return;
-            }          
+            if (functions.Count() > 0)
+            {                
+                var functionInfos = new List<FunctionInfo>();
+                foreach (var functionInfo in functions)
+                {
+                    functionInfos.Add(new FunctionInfo()
+                    {
+                        Name = functionInfo.Name,
+                        DisplayText = functionInfo.DisplayText(),
+                        SpokenText = functionInfo.SpokenText()
+                    });
+                }    
 
-            await requestContext.SendResult(new FunctionListResult{ Success = true });
+                result.Success = true;
+                result.Functions = functionInfos.ToArray();
+            }
+
+            await requestContext.SendResult(result);
         }
 
         /// <summary>

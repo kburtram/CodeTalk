@@ -12,9 +12,20 @@ namespace CodeTalk.LanguageService.Contracts
         public string OwnerUri { get; set; }
     }
 
+    public class FunctionInfo
+    {
+        public string Name { get; set; }
+
+        public string DisplayText { get; set; }
+
+        public string SpokenText { get; set; }
+    }
+
     public class FunctionListResult
     {
         public bool Success { get; set; }
+
+        public FunctionInfo[] Functions { get; set; }
     }
 
     public class FunctionListRequest

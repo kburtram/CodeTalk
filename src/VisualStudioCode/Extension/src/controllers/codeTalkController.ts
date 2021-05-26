@@ -6,6 +6,7 @@
 'use strict';
 import * as events from 'events';
 import vscode = require('vscode');
+import { FunctionListProvider } from '../controls/functionListProvider';
 import CodeTalkServiceClient from '../languageservice/serviceClient';
 import { FunctionListRequest, FunctionListParams, FunctionListResult } from '../models/contracts/languageService';
 
@@ -16,6 +17,7 @@ export default class CodeTalkController implements vscode.Disposable {
     private _context: vscode.ExtensionContext;
     private _event: events.EventEmitter = new events.EventEmitter();
     private _initialized: boolean = false;
+    private _functionListProvider: FunctionListProvider;
 
     /**
      * The main controller constructor
@@ -83,6 +85,12 @@ export default class CodeTalkController implements vscode.Disposable {
         // initialize language service client
         await CodeTalkServiceClient.instance.initialize(this._context);
 
+        this._functionListProvider = new FunctionListProvider();
+
+        this._context.subscriptions.push(
+            vscode.window.registerTreeDataProvider('codeTalkFunctionList', this._functionListProvider)
+        );
+
         this._initialized = true;
         return true;
     }
@@ -90,7 +98,10 @@ export default class CodeTalkController implements vscode.Disposable {
     private async handleShowFunctions(): Promise<boolean> {
         let ownerUri: string = this.getActiveTextEditorUri();
         let params: FunctionListParams = { ownerUri: ownerUri };
-        const result = await CodeTalkServiceClient.instance.client.sendRequest(FunctionListRequest.type, params);
+        const result: FunctionListResult = await CodeTalkServiceClient.instance.client.sendRequest(FunctionListRequest.type, params);
+        if (result.success) {
+            this._functionListProvider.updateFunctionList(result.functions);
+        }
         return result.success;
     }
 

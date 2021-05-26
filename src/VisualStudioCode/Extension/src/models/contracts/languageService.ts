@@ -11,8 +11,18 @@ import { RequestType } from 'vscode-languageclient';
     public ownerUri: string;
 }
 
+export interface FunctionInfo {
+    name: string;
+
+    displayText: string;
+
+    spokenText: string;
+}
+
 export interface FunctionListResult {
     success: boolean;
+
+    functions: FunctionInfo[];
 }
 
 export namespace FunctionListRequest {

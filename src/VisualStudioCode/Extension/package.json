@@ -105,6 +105,23 @@
         "category": "Code Talk"
       }
     ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "codeTalk",
+          "title": "Code Talk",
+          "icon": "./images/server_page_inverse.svg"
+        }
+      ]
+    },
+    "views": {
+      "codeTalk": [
+        {
+          "id": "codeTalkFunctionList",
+          "name": "Function List"
+        }
+      ]
+    },
     "configuration": {
       "type": "object",
       "title": "Code Talk configuration",
