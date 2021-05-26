@@ -166,19 +166,19 @@ namespace CodeTalk.LanguageService
                     Capabilities = new ServerCapabilities
                     {
                         TextDocumentSync = TextDocumentSyncKind.Incremental,
-                        DefinitionProvider = true,
+                        DefinitionProvider = false,
                         ReferencesProvider = false,
-                        DocumentFormattingProvider = true,
-                        DocumentRangeFormattingProvider = true,
+                        DocumentFormattingProvider = false,
+                        DocumentRangeFormattingProvider = false,
                         DocumentHighlightProvider = false,
-                        HoverProvider = true,
+                        HoverProvider = false,
                         CompletionProvider = new CompletionOptions
                         {
-                            ResolveProvider = true,
+                            ResolveProvider = false,
                             TriggerCharacters = CompletionTriggerCharacters
                         },
                         SignatureHelpProvider = new SignatureHelpOptions
-                        {
+                        {                        
                             TriggerCharacters = new string[] { " ", "," }
                         }
                     }

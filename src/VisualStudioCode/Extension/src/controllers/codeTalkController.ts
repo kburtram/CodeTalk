@@ -5,6 +5,7 @@
 
 'use strict';
 import * as events from 'events';
+import { DebugSession } from 'vscode';
 import vscode = require('vscode');
 import { FunctionListProvider } from '../controls/functionListProvider';
 import CodeTalkServiceClient from '../languageservice/serviceClient';
@@ -18,6 +19,7 @@ export default class CodeTalkController implements vscode.Disposable {
     private _event: events.EventEmitter = new events.EventEmitter();
     private _initialized: boolean = false;
     private _functionListProvider: FunctionListProvider;
+    private _previousDiagnostics = undefined;
 
     /**
      * The main controller constructor
@@ -36,16 +38,6 @@ export default class CodeTalkController implements vscode.Disposable {
     }
 
     /**
-     * Helper method to setup command registrations with arguments
-     */
-    private registerCommandWithArgs(command: string): void {
-        const self = this;
-        this._context.subscriptions.push(vscode.commands.registerCommand(command, (args: any) => {
-            self._event.emit(command, args);
-        }));
-    }
-
-    /**
      * Disposes the controller
      */
     dispose(): void {
@@ -61,7 +53,7 @@ export default class CodeTalkController implements vscode.Disposable {
     /**
      * Initializes the extension
      */
-    public async activate():  Promise<boolean> {
+    public async activate(): Promise<boolean> {
         // initialize the language client then register the commands
         const didInitialize = await this.initialize();
         if (didInitialize) {
@@ -70,6 +62,33 @@ export default class CodeTalkController implements vscode.Disposable {
             this._event.on('codeTalk.showFunctions', () => {
                 this.handleShowFunctions();
             });
+
+            vscode.languages.onDidChangeDiagnostics((e: vscode.DiagnosticChangeEvent) => {
+                let activeUri: string = this.getActiveTextEditorUri();
+                for (let uri of e.uris) {
+                    if (activeUri === uri.toString(true)) {
+                        let currentDiagnostics = vscode.languages.getDiagnostics(uri);
+                        if (this._previousDiagnostics && currentDiagnostics.length > this._previousDiagnostics.length) {
+                            vscode.window.showInformationMessage('Play sound for new error');
+                        }
+                        this._previousDiagnostics = currentDiagnostics;
+                    }
+                }
+            });
+
+            vscode.debug.registerDebugAdapterTrackerFactory('*', {
+                createDebugAdapterTracker(session: DebugSession) {
+                    return {
+                        onWillReceiveMessage: m => { },
+                        onDidSendMessage: m => {
+                            if (m && m.type === 'event' && m.event === 'stopped' && m.body && m.body.reason === 'breakpoint') {
+                                vscode.window.showInformationMessage('Play sound for stopped breakpoint');
+                            }
+                        }
+                    };
+                }
+            });
+
             return true;
         }
     }
@@ -108,7 +127,7 @@ export default class CodeTalkController implements vscode.Disposable {
     /**
      * Get the URI string for the current active text editor
      */
-     private  getActiveTextEditorUri(): string {
+    private getActiveTextEditorUri(): string {
         if (typeof vscode.window.activeTextEditor !== 'undefined' &&
             typeof vscode.window.activeTextEditor.document !== 'undefined') {
             return vscode.window.activeTextEditor.document.uri.toString(true);
