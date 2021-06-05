@@ -5,9 +5,8 @@
 
 'use strict';
 import * as events from 'events';
-import vscode = require('vscode');
-import { FunctionListProvider } from '../controls/functionListProvider';
-import { FunctionListParams } from '../models/contracts/languageService';
+import * as vscode from 'vscode';
+import { FunctionInfo, FunctionListProvider } from '../controls/functionListProvider';
 import { Breakpoint, SourceBreakpoint } from 'vscode';
 import { IErrorSettings, IExpressionTalkpoint, ITalkpoint, ITalkpointSettings, ITextTalkpoint, ITonalTalkpoint } from '../models/interfaces';
 import { asyncFilter } from '../models/utils';
@@ -164,9 +163,6 @@ export default class CodeTalkController implements vscode.Disposable {
 
         await this.loadSettings();
 
-        // initialize language service client
-        // await CodeTalkServiceClient.instance.initialize(this._context);
-
         this._functionListProvider = new FunctionListProvider();
 
         this._context.subscriptions.push(
@@ -218,20 +214,23 @@ export default class CodeTalkController implements vscode.Disposable {
         }
     }, 2000);
 
-
-    /**
-     * Handle showing function list
-     * @returns success
-     */
-    private async handleShowFunctions(): Promise<boolean> {
-        let ownerUri: string = this.getActiveTextEditorUriString();
-        let params: FunctionListParams = { ownerUri: ownerUri };
-        // const result: FunctionListResult = await CodeTalkServiceClient.instance.client.sendRequest(FunctionListRequest.type, params);
-        // if (result.success) {
-        //     this._functionListProvider.updateFunctionList(result.functions);
-        // }
-        // return result.success;
-        return Promise.resolve(true);
+    private buildFunctionList(symbols: vscode.DocumentSymbol[], functionList: FunctionInfo[]) {
+        for (let i = 0; i < symbols.length; ++i) {
+            let symbol: vscode.DocumentSymbol = symbols[i];
+            if (symbol.kind === vscode.SymbolKind.Function
+                || symbol.kind === vscode.SymbolKind.Method) {
+                let displayText = symbol.name + ' at line ' + symbol.range.start.line;
+                functionList.push(<FunctionInfo>{
+                    name: symbol.name,
+                    displayText: displayText,
+                    spokenText: displayText,
+                    line: symbol.range.start.line
+                });
+            }
+            if (symbol.children && symbol.children.length > 0) {
+                this.buildFunctionList(symbol.children, functionList);
+            }
+        }
     }
 
     /**
@@ -273,6 +272,22 @@ export default class CodeTalkController implements vscode.Disposable {
             }
 
             this._internalEvents.emit('talkpoints.changed');
+        }
+
+    private async handleShowFunctions(): Promise<boolean> {
+        let ownerUri: vscode.Uri = this.getActiveTextEditorUri();
+        if (ownerUri) {
+            let symbols : vscode.DocumentSymbol[] = await vscode.commands.executeCommand(
+                'vscode.executeDocumentSymbolProvider',
+                ownerUri);
+            if (symbols) {
+                let functionList: FunctionInfo[] = [];
+                this.buildFunctionList(symbols, functionList);
+                functionList.sort((a, b) => (a.line > b.line) ? 1 : -1)
+                this._functionListProvider.updateFunctionList(functionList);
+            }
+        }
+        return true;
     }
 
     /**
@@ -513,17 +528,6 @@ export default class CodeTalkController implements vscode.Disposable {
         if (typeof vscode.window.activeTextEditor !== 'undefined' &&
             typeof vscode.window.activeTextEditor.document !== 'undefined') {
             return vscode.window.activeTextEditor.document.uri;
-        }
-        return undefined;
-    }
-
-    /**
-     * Get the URI string for the current active text editor
-     */
-    private getActiveTextEditorUriString(): string {
-        if (typeof vscode.window.activeTextEditor !== 'undefined' &&
-            typeof vscode.window.activeTextEditor.document !== 'undefined') {
-            return vscode.window.activeTextEditor.document.uri.toString(true);
         }
         return undefined;
     }

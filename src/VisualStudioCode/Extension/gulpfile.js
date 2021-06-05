@@ -55,14 +55,6 @@ gulp.task('ext:compile-src', (done) => {
 
 gulp.task('ext:compile', gulp.series('ext:compile-src'));
 
-gulp.task('ext:copy-config', () => {
-    var env = process.env.VsCodeTalkEnv;
-    env = env == undefined ? "dev" : env;
-    return gulp.src(config.paths.project.root + '/src/configurations/' + env + '.config.json')
-            .pipe(rename('config.json'))
-            .pipe(gulp.dest(config.paths.project.root + '/out/src'));
-});
-
 gulp.task('ext:copy-js', () => {
     return gulp.src([
             config.paths.project.root + '/src/**/*.js'])
@@ -84,7 +76,7 @@ gulp.task('clean', function (done) {
     return del('out', done);
 });
 
-gulp.task('compile', gulp.series('clean', 'ext:copy-config', 'ext:build'));
+gulp.task('compile', gulp.series('clean', 'ext:build'));
 
 gulp.task('watch', function(){
     return gulp.watch(config.paths.project.root + '/src/**/*', gulp.series('compile'))
