@@ -174,7 +174,6 @@ export default class CodeTalkController implements vscode.Disposable {
     }
 
     private loadSettings = debounce(async() => {
-        console.log("Load settings fired.");
         const workspaceSettings = vscode.workspace.getConfiguration('codeTalk');
         const prevErrorSettings = this._errorSettings;
         const prevTalkPointSettings = this._talkPointSettings;
@@ -239,7 +238,6 @@ export default class CodeTalkController implements vscode.Disposable {
      */
     private getRealTimeErrorDiagnosticsListener(interval: number) {
         return debounce((e: vscode.DiagnosticChangeEvent) => {
-            console.log("running error detection");
             const activeUri: vscode.Uri = this.getActiveTextEditorUri();
             for (const uri of e.uris) {
                 if (activeUri?.path === uri.path) {
@@ -431,7 +429,6 @@ export default class CodeTalkController implements vscode.Disposable {
      * Debounced so it only runs at most once a second.
      */
     private renderTalkpointDecorations = debounce(() => {
-        console.log('render called')
         let editor = vscode.window.activeTextEditor;
         if (editor) {
             let decorationsArray: vscode.DecorationOptions[] = [];
@@ -485,8 +482,6 @@ export default class CodeTalkController implements vscode.Disposable {
                                     const talkpoint = this._talkPoints.get(b.id);
                                     switch(talkpoint.type) {
                                         case "Tonal":
-                                            console.log(this._tonalTalkpointBuffer);
-                                            console.log(typeof this._tonalTalkpointBuffer);
                                             play(this._tonalTalkpointBuffer, {}, undefined);
                                             break;
                                         case "Text":
@@ -499,7 +494,6 @@ export default class CodeTalkController implements vscode.Disposable {
                                                 expression: expressionTalkpoint.expression,
                                                 frameId: currentFrame.id // run in the scope of the most recent local stack frame
                                             });
-                                            console.log(response);
                                             vscode.window.showInformationMessage("Expression Talkpoint Hit: " + response.result);
                                             break;
                                         default:
