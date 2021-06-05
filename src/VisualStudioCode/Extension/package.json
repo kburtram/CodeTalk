@@ -199,7 +199,7 @@
         "codeTalk.errors.enableErrorDetection": {
           "type": "boolean",
           "default": true,
-          "description": "Play a sound when an error in the active file is detected."
+          "description": "Enable a sound when an error in the active file is detected."
         },
         "codeTalk.errors.errorDetectionInterval": {
           "type": "number",

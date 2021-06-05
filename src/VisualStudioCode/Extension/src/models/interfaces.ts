@@ -7,28 +7,30 @@
 
 import { Position, Uri } from "vscode";
 
-export interface ITalkpoint {
+
+export interface TalkpointBase {
     breakpointId: string;
-    type: "Tonal" | "Text" | "Expression";
     position: Position;
     uri: Uri;
     shouldContinue: boolean;
 }
 
-export interface ITonalTalkpoint extends ITalkpoint {
+export interface ITonalTalkpoint extends TalkpointBase {
     type: "Tonal";
     sound: string,
 }
 
-export interface ITextTalkpoint extends ITalkpoint {
+export interface ITextTalkpoint extends TalkpointBase {
     type: "Text";
     text: string,
 }
 
-export interface IExpressionTalkpoint extends ITalkpoint {
+export interface IExpressionTalkpoint extends TalkpointBase {
     type: "Expression";
     expression: string,
 }
+
+export type ITalkpoint = ITonalTalkpoint | ITextTalkpoint | IExpressionTalkpoint;
 
 export interface ILogger {
     logDebug(message: string): void;
