@@ -7,7 +7,6 @@
 
 import { Position, Uri } from "vscode";
 
-
 export interface TalkpointBase {
     breakpointId: string;
     position: Position;
@@ -31,14 +30,6 @@ export interface IExpressionTalkpoint extends TalkpointBase {
 }
 
 export type ITalkpoint = ITonalTalkpoint | ITextTalkpoint | IExpressionTalkpoint;
-
-export interface ILogger {
-    logDebug(message: string): void;
-    increaseIndent(): void;
-    decreaseIndent(): void;
-    append(message?: string): void;
-    appendLine(message?: string): void;
-}
 
 export interface IErrorSettings {
     enableErrorDetection: boolean;
