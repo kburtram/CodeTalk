@@ -14,18 +14,6 @@ const configTracingLevel = 'tracingLevel';
 const configLogRetentionMinutes = 'logRetentionMinutes';
 const configLogFilesRemovalLimit = 'logFilesRemovalLimit';
 
-// Return 'true' if the active editor window has a .sql file, false otherwise
-export function isEditingSqlFile(): boolean {
-    let sqlFile = false;
-    let editor = getActiveTextEditor();
-    if (editor) {
-        if (editor.document.languageId === 'SQL') {
-            sqlFile = true;
-        }
-    }
-    return sqlFile;
-}
-
 export const asyncFilter = async (arr: Object[], predicate: (...args: any[]) => Promise<boolean>) => {
     const results = await Promise.all(arr.map(predicate));
     return arr.filter((_v, index) => results[index]);

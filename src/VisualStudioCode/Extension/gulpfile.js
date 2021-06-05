@@ -56,7 +56,7 @@ gulp.task('ext:compile-src', (done) => {
 gulp.task('ext:compile', gulp.series('ext:compile-src'));
 
 gulp.task('ext:copy-config', () => {
-    var env = process.env.VsMsSqlEnv;
+    var env = process.env.VsCodeTalkEnv;
     env = env == undefined ? "dev" : env;
     return gulp.src(config.paths.project.root + '/src/configurations/' + env + '.config.json')
             .pipe(rename('config.json'))
