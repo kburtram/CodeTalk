@@ -6,10 +6,8 @@
 'use strict';
 import * as events from 'events';
 import { DebugSession } from 'vscode';
+import { FunctionInfo, FunctionListProvider } from '../controls/functionListProvider';
 import vscode = require('vscode');
-import { FunctionListProvider } from '../controls/functionListProvider';
-import CodeTalkServiceClient from '../languageservice/serviceClient';
-import { FunctionListRequest, FunctionListParams, FunctionListResult } from '../models/contracts/languageService';
 
 /**
  * The main controller class that initializes the extension
@@ -102,7 +100,6 @@ export default class CodeTalkController implements vscode.Disposable {
      */
     public async initialize(): Promise<boolean> {
         // initialize language service client
-        await CodeTalkServiceClient.instance.initialize(this._context);
 
         this._functionListProvider = new FunctionListProvider();
 
@@ -114,14 +111,37 @@ export default class CodeTalkController implements vscode.Disposable {
         return true;
     }
 
+    private buildFunctionList(symbols : vscode.DocumentSymbol[], functionList: FunctionInfo[]) {
+        for (let i = 0; i < symbols.length; ++i) {
+            let symbol: vscode.DocumentSymbol = symbols[i];
+            if (symbol.kind === vscode.SymbolKind.Function
+                || symbol.kind === vscode.SymbolKind.Method) {
+                let displayText = symbol.name + ' at line ' + symbol.range.start.line;
+                functionList.push(<FunctionInfo>{
+                    name: symbol.name,
+                    displayText: displayText,
+                    spokenText: displayText,
+                    line: symbol.range.start.line
+                });
+            }
+            if (symbol.children && symbol.children.length > 0) {
+                this.buildFunctionList(symbol.children, functionList);
+            }
+        }
+    }
+
     private async handleShowFunctions(): Promise<boolean> {
         let ownerUri: string = this.getActiveTextEditorUri();
-        let params: FunctionListParams = { ownerUri: ownerUri };
-        const result: FunctionListResult = await CodeTalkServiceClient.instance.client.sendRequest(FunctionListRequest.type, params);
-        if (result.success) {
-            this._functionListProvider.updateFunctionList(result.functions);
+        let symbols : vscode.DocumentSymbol[] = await vscode.commands.executeCommand(
+            'vscode.executeDocumentSymbolProvider',
+            vscode.Uri.parse(ownerUri));
+        if (symbols) {
+            let functionList: FunctionInfo[] = [];
+            this.buildFunctionList(symbols, functionList);
+            functionList.sort((a, b) => (a.line > b.line) ? 1 : -1)
+            this._functionListProvider.updateFunctionList(functionList);
         }
-        return result.success;
+        return true;
     }
 
     /**
