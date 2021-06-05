@@ -9,7 +9,7 @@ import { FunctionInfo, FunctionListProvider } from '../controls/functionListProv
 import { IErrorSettings, IExpressionTalkpoint, ITalkpoint, ITalkpointSettings, ITextTalkpoint, ITonalTalkpoint } from '../models/interfaces';
 import { asyncFilter } from '../models/utils';
 import { ITalkpointCreationState, showTalkpointCreationSteps } from '../models/talkpointMenu';
-import { debounce } from 'underscore';
+import { contains, debounce } from 'underscore';
 
 import * as events from 'events';
 import * as vscode from 'vscode';
@@ -121,9 +121,7 @@ export default class CodeTalkController implements vscode.Disposable {
                 // TO-DO
             });
 
-            this._event.on('codeTalk.moveToParent', async(textEditor: vscode.TextEditor) => {
-                // TO-DO
-            })
+            this._event.on('codeTalk.moveToParent', this.handleMoveToParent.bind(this));
             this._event.on('codeTalk.addTalkpoint', this.handleAddTalkpoint.bind(this));
             this._event.on('codeTalk.removeAllTalkpoints', this.handleRemoveAllTalkpoints.bind(this));
             this._internalEvents.on('talkpoints.changed', async() => {
@@ -218,7 +216,7 @@ export default class CodeTalkController implements vscode.Disposable {
             let symbol: vscode.DocumentSymbol = symbols[i];
             if (symbol.kind === vscode.SymbolKind.Function
                 || symbol.kind === vscode.SymbolKind.Method) {
-                let displayText = symbol.name + ' at line ' + symbol.range.start.line;
+                let displayText = symbol.name + ' at line ' + (symbol.range.start.line + 1);
                 functionList.push(<FunctionInfo>{
                     name: symbol.name,
                     displayText: displayText,
@@ -238,7 +236,7 @@ export default class CodeTalkController implements vscode.Disposable {
      */
     private getRealTimeErrorDiagnosticsListener(interval: number) {
         return debounce((e: vscode.DiagnosticChangeEvent) => {
-            if (this._errorSettings.enableErrorDetection) {
+            if (this._errorSettings?.enableErrorDetection) {
                 const activeUri: vscode.Uri = this.getActiveTextEditorUri();
                 for (const uri of e.uris) {
                     if (activeUri?.path === uri.path) {
@@ -290,6 +288,60 @@ export default class CodeTalkController implements vscode.Disposable {
         return true;
     }
 
+    private async handleMoveToParent(editor: vscode.TextEditor) : Promise<void> {
+        const activeUri = editor?.document?.uri;
+        const position = editor?.selection?.anchor;
+
+        if (activeUri && position) {
+
+            let symbols : vscode.DocumentSymbol[] = await vscode.commands.executeCommand(
+                'vscode.executeDocumentSymbolProvider',
+                activeUri);
+
+            if (symbols) {
+                let immediateParent : vscode.DocumentSymbol;
+                for (const symbol of symbols) {
+                    const result = this.findImmediateParentOf(position, symbol);
+                    if (result != null) {
+                        immediateParent = result;
+                        continue;
+                    }
+                }
+
+                if (immediateParent) {
+                    editor.selections = [new vscode.Selection(immediateParent.range.start, immediateParent.range.start)];
+                    vscode.window.showInformationMessage(`Moved to parent ${vscode.SymbolKind[immediateParent.kind]} ${immediateParent.name} at line ${(immediateParent.range.start.line + 1)}`);
+                } else {
+                    vscode.window.showInformationMessage('No parent found.');
+                }
+            }
+        }
+    }
+
+    /**
+     * Recursive function that finds the immediate parent of a position.
+     * @param position the position whose parent we are seeking
+     * @param parent the current parent node we are inspecting
+     * @returns the immediate parent of the position if found, else null
+     */
+    private findImmediateParentOf(position: vscode.Position, parent: vscode.DocumentSymbol) : vscode.DocumentSymbol | null {
+        // Is immediate if contains position AND has no children that contain the position
+
+        if (parent.range.contains(position) &&
+            parent.range.start.line != position.line) {
+
+            for (const child of parent.children) {
+                const result = this.findImmediateParentOf(position, child)
+                if (result) {
+                    return result;
+                }
+            }
+
+            return parent;
+        }
+        return null;
+    }
+
     /**
      * Saves talkpoints to the workspace storage, so it can be reloaded on the next session.
      */
@@ -326,7 +378,7 @@ export default class CodeTalkController implements vscode.Disposable {
                 if (this._talkPoints.has(breakpoint?.id)) {
                     this._talkPoints.delete(breakpoint.id);
                     const line = (breakpoint as vscode.SourceBreakpoint)?.location.range.start.line;
-                    vscode.window.showInformationMessage(`Removed talkpoint from line ${line}.`);
+                    vscode.window.showInformationMessage(`Removed talkpoint from line ${line + 1}.`);
                 }
             }
         }
@@ -360,7 +412,7 @@ export default class CodeTalkController implements vscode.Disposable {
     }
 
     /**
-     *
+     * Create or remove a talkpoint depending on if one exists
      * @param activeUri The current file uri
      * @param selection The current selection
      * @param breakpoint The breakpoint at this line
@@ -391,7 +443,7 @@ export default class CodeTalkController implements vscode.Disposable {
                 shouldContinue: state.shouldContinue,
             } as ITonalTalkpoint | ITextTalkpoint | IExpressionTalkpoint);
             vscode.debug.addBreakpoints([breakpoint]);
-            vscode.window.showInformationMessage(`Added talkpoint to line ${selection.line}.`);
+            vscode.window.showInformationMessage(`Added talkpoint to line ${selection.line + 1}.`);
         }
         this._internalEvents.emit('talkpoints.changed');
     }
