@@ -4,17 +4,17 @@
  *--------------------------------------------------------------------------------------------*/
 
 'use strict';
-import * as events from 'events';
-import * as vscode from 'vscode';
+
 import { FunctionInfo, FunctionListProvider } from '../controls/functionListProvider';
-import { Breakpoint, SourceBreakpoint } from 'vscode';
 import { IErrorSettings, IExpressionTalkpoint, ITalkpoint, ITalkpointSettings, ITextTalkpoint, ITonalTalkpoint } from '../models/interfaces';
 import { asyncFilter } from '../models/utils';
+import { ITalkpointCreationState, showTalkpointCreationSteps } from '../models/talkpointMenu';
 import { debounce } from 'underscore';
 
+import * as events from 'events';
+import * as vscode from 'vscode';
 import play = require('audio-play');
 import load = require('audio-loader');
-import { ITalkpointCreationState, showTalkpointCreationSteps } from '../models/talkpointMenu';
 
 /**
  * The main controller class that initializes the extension
@@ -325,7 +325,7 @@ export default class CodeTalkController implements vscode.Disposable {
             for (const breakpoint of breakpoints) {
                 if (this._talkPoints.has(breakpoint?.id)) {
                     this._talkPoints.delete(breakpoint.id);
-                    const line = (breakpoint as SourceBreakpoint)?.location.range.start.line;
+                    const line = (breakpoint as vscode.SourceBreakpoint)?.location.range.start.line;
                     vscode.window.showInformationMessage(`Removed talkpoint from line ${line}.`);
                 }
             }
@@ -410,7 +410,7 @@ export default class CodeTalkController implements vscode.Disposable {
 
             this._talkPoints.clear();
             breakpoints.forEach(breakpoint => {
-                const sourceBreakpoint = breakpoint as SourceBreakpoint;
+                const sourceBreakpoint = breakpoint as vscode.SourceBreakpoint;
                 if (sourceBreakpoint) {
                     const filePath = sourceBreakpoint.location.uri.path;
                     const line = sourceBreakpoint.location.range.start.line;
@@ -437,7 +437,7 @@ export default class CodeTalkController implements vscode.Disposable {
             let code = editor.document.getText();
             let lines = code.split(editor.document.eol == vscode.EndOfLine.LF ? '\n' : '\r\n');
 
-            const breakpointsWithTalkpoints = vscode.debug.breakpoints.map(b => b as SourceBreakpoint)
+            const breakpointsWithTalkpoints = vscode.debug.breakpoints.map(b => b as vscode.SourceBreakpoint)
                 .filter(b => b.location.uri.path === editor.document.uri.path)
                 .filter(b => this._talkPoints.has(b.id));
 
@@ -479,7 +479,7 @@ export default class CodeTalkController implements vscode.Disposable {
                                     debugBreakpointLine === currentFrame.line
                             });
 
-                            matchedBreakpoints.forEach(async(b: Breakpoint) => {
+                            matchedBreakpoints.forEach(async(b: vscode.Breakpoint) => {
                                 if (this._talkPoints.has(b.id)) {
                                     const talkpoint = this._talkPoints.get(b.id);
                                     switch(talkpoint.type) {

@@ -20,15 +20,6 @@
             "outFiles": [
                 "${workspaceRoot}/out/src/**/*.js"
             ]
-        },
-        {
-            "type": "pwa-node",
-            "request": "launch",
-            "name": "Compile Extension",
-            "program": "${workspaceRoot}/node_modules/gulp/bin/gulp.js",
-            "args": [
-                "compile"
-            ]
         }
     ]
 }
