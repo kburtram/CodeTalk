@@ -11,7 +11,6 @@ var tsProject = ts.createProject('tsconfig.json');
 var del = require('del');
 var srcmap = require('gulp-sourcemaps');
 var config = require('./tasks/config');
-var argv = require('yargs').argv;
 
 gulp.task('ext:lint', () => {
     // !! If updating this make sure to check if you need to update the TSA Scan task in ADO !!
@@ -28,7 +27,6 @@ gulp.task('ext:lint', () => {
     .pipe(gulpTsLint.report());
 });
 
-
 // Compile source
 gulp.task('ext:compile-src', (done) => {
     return gulp.src([
@@ -43,8 +41,6 @@ gulp.task('ext:compile-src', (done) => {
                         process.exit(1);
                     }
                 })
-                //.pipe(nls.rewriteLocalizeCalls())
-                //.pipe(nls.createAdditionalLanguageFiles(nls.coreLanguages, config.paths.project.root + '/localization/i18n', undefined, false))
                 .pipe(srcmap.write('.', {
                    sourceRoot: function(file){ return file.cwd + '/src'; }
                 }))
