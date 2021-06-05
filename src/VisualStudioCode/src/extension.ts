@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 'use strict';
-import vscode = require('vscode');
+import * as vscode from 'vscode';
 import CodeTalkController from './controllers/codeTalkController';
 
 let codeTalkController: CodeTalkController = undefined;

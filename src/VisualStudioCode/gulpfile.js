@@ -1,5 +1,9 @@
-﻿var gulp = require('gulp');
-var rename = require('gulp-rename');
+﻿/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+var gulp = require('gulp');
 var gulpTsLint = require('gulp-tslint');
 var ts = require('gulp-typescript');
 var tslint = require('tslint');
@@ -7,13 +11,7 @@ var tsProject = ts.createProject('tsconfig.json');
 var del = require('del');
 var srcmap = require('gulp-sourcemaps');
 var config = require('./tasks/config');
-var concat = require('gulp-concat');
-var minifier = require('gulp-uglify/minifier');
-var uglifyjs = require('uglify-js');
 var argv = require('yargs').argv;
-var min = (argv.min === undefined) ? false : true;
-var vscodeTest = require('vscode-test');
-var packageJson = require('./package.json');
 
 gulp.task('ext:lint', () => {
     // !! If updating this make sure to check if you need to update the TSA Scan task in ADO !!
