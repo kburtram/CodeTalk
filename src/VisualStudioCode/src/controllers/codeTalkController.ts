@@ -238,14 +238,16 @@ export default class CodeTalkController implements vscode.Disposable {
      */
     private getRealTimeErrorDiagnosticsListener(interval: number) {
         return debounce((e: vscode.DiagnosticChangeEvent) => {
-            const activeUri: vscode.Uri = this.getActiveTextEditorUri();
-            for (const uri of e.uris) {
-                if (activeUri?.path === uri.path) {
-                    let currentDiagnostics : vscode.Diagnostic[] = vscode.languages.getDiagnostics(uri);
-                    if (currentDiagnostics.length > this._previousDiagnostics?.length) {
-                        play(this._errorSoundBuffer, {}, undefined);
+            if (this._errorSettings.enableErrorDetection) {
+                const activeUri: vscode.Uri = this.getActiveTextEditorUri();
+                for (const uri of e.uris) {
+                    if (activeUri?.path === uri.path) {
+                        let currentDiagnostics : vscode.Diagnostic[] = vscode.languages.getDiagnostics(uri);
+                        if (currentDiagnostics.length > this._previousDiagnostics?.length) {
+                            play(this._errorSoundBuffer, {}, undefined);
+                        }
+                        this._previousDiagnostics = currentDiagnostics;
                     }
-                    this._previousDiagnostics = currentDiagnostics;
                 }
             }
         }, interval);
