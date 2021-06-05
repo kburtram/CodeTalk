@@ -5,9 +5,8 @@
 
 'use strict';
 import * as events from 'events';
-import vscode = require('vscode');
-import { FunctionListProvider } from '../controls/functionListProvider';
-import { FunctionListParams } from '../models/contracts/languageService';
+import * as vscode from 'vscode';
+import { FunctionInfo, FunctionListProvider } from '../controls/functionListProvider';
 import { Breakpoint, SourceBreakpoint } from 'vscode';
 import { IErrorSettings, IExpressionTalkpoint, ITalkpoint, ITalkpointSettings, ITextTalkpoint } from '../models/interfaces';
 import { asyncFilter } from '../models/utils';
@@ -280,15 +279,17 @@ export default class CodeTalkController implements vscode.Disposable {
     }
 
     private async handleShowFunctions(): Promise<boolean> {
-        let ownerUri: string = this.getActiveTextEditorUri();
-        let symbols : vscode.DocumentSymbol[] = await vscode.commands.executeCommand(
-            'vscode.executeDocumentSymbolProvider',
-            vscode.Uri.parse(ownerUri));
-        if (symbols) {
-            let functionList: FunctionInfo[] = [];
-            this.buildFunctionList(symbols, functionList);
-            functionList.sort((a, b) => (a.line > b.line) ? 1 : -1)
-            this._functionListProvider.updateFunctionList(functionList);
+        let ownerUri: vscode.Uri = this.getActiveTextEditorUri();
+        if (ownerUri) {
+            let symbols : vscode.DocumentSymbol[] = await vscode.commands.executeCommand(
+                'vscode.executeDocumentSymbolProvider',
+                ownerUri);
+            if (symbols) {
+                let functionList: FunctionInfo[] = [];
+                this.buildFunctionList(symbols, functionList);
+                functionList.sort((a, b) => (a.line > b.line) ? 1 : -1)
+                this._functionListProvider.updateFunctionList(functionList);
+            }
         }
         return true;
     }
@@ -434,30 +435,6 @@ export default class CodeTalkController implements vscode.Disposable {
         }
     }, 1000, true);
 
-    /**
-     * Get the URI for the current active text editor
-     * @return
-     */
-    private getActiveTextEditorUri(): vscode.Uri {
-        if (typeof vscode.window.activeTextEditor !== 'undefined' &&
-            typeof vscode.window.activeTextEditor.document !== 'undefined') {
-            return vscode.window.activeTextEditor.document.uri;
-        }
-        return undefined;
-    }
-    
-    
-    private async handleShowFunctions(): Promise<boolean> {
-        let ownerUri: string = this.getActiveTextEditorUriString();
-        let params: FunctionListParams = { ownerUri: ownerUri };
-        // const result: FunctionListResult = await CodeTalkServiceClient.instance.client.sendRequest(FunctionListRequest.type, params);
-        // if (result.success) {
-        //     this._functionListProvider.updateFunctionList(result.functions);
-        // }
-        // return result.success;
-        return Promise.resolve(true);
-    }
-
     private loadSettings = debounce(async() => {
         console.log("Load settings fired.");
         const workspaceSettings = vscode.workspace.getConfiguration('codeTalk');
@@ -517,147 +494,6 @@ export default class CodeTalkController implements vscode.Disposable {
     }
 
     /**
-     * Saves talkpoints to the workspace storage, so it can be reloaded on the next session.
-     */
-    private async saveTalkpoints() {
-        await this._context.workspaceState.update("talkpoints", [...this._talkPoints.entries()]);
-    }
-
-    /**
-     * Removes all talkpoints from the current workspace.
-    */
-    private async removeAllTalkpoints() {
-        let numTalkpoints = this._talkPoints.size;
-
-        if (numTalkpoints > 0) {
-            const breakpoints = vscode.debug.breakpoints.filter(b => this._talkPoints.has(b.id));
-            vscode.debug.removeBreakpoints(breakpoints);
-            this._talkPoints.clear();
-            vscode.window.showInformationMessage(`Removed ${numTalkpoints} talkpoints from workspace.`);
-            this._internalEvents.emit('talkpoints.changed');
-        } else {
-            vscode.window.showInformationMessage("There are no talkpoints registered.");
-        }
-    }
-
-    /**
-     * Removes talkpoints associated with the given breakpoints.
-     * @param breakpoints
-     */
-    private async removeTalkpoints(breakpoints: readonly vscode.Breakpoint[]) {
-        // User removed breakpoints
-        if (breakpoints.length > 0) {
-            // Also remove from talkpoints, since there's nothing to break on
-            for (const breakpoint of breakpoints) {
-                if (this._talkPoints.has(breakpoint?.id)) {
-                    this._talkPoints.delete(breakpoint.id);
-                    const line = (breakpoint as SourceBreakpoint)?.location.range.start.line;
-                    vscode.window.showInformationMessage(`Removed talkpoint from line ${line}.`);
-                }
-            }
-        }
-    }
-
-    /**
-     * Create a new Talkpoint
-     * @param type
-     */
-    private async createTalkpoint(type: string) {
-        const activeUri: vscode.Uri = this.getActiveTextEditorUri();
-        const selection : vscode.Position = vscode.window.activeTextEditor?.selection?.anchor;
-
-        const existingBreakpoints = vscode.debug.breakpoints
-            .map(b => b as vscode.SourceBreakpoint)
-            .filter(b => b?.location.range.start.line == selection.line);
-
-        let breakpoint : vscode.SourceBreakpoint;
-        if (existingBreakpoints.length > 0) {
-            breakpoint = existingBreakpoints[0];
-        } else {
-            const location = new vscode.Location(activeUri, new vscode.Position(selection.line, 0));
-            breakpoint = new vscode.SourceBreakpoint(location);
-        }
-
-        if (this._talkPoints.has(breakpoint.id)) {
-            // Since talkpoint already exists, treat this as toggle and remove breakpoint
-            vscode.debug.removeBreakpoints([breakpoint]);
-            this._talkPoints.delete(breakpoint.id);
-            vscode.window.showInformationMessage(`Removed talkpoint from line ${selection.line}.`);
-        } else {
-            this._talkPoints.set(breakpoint.id, {
-                type: "Expression",
-                expression: "1+1",
-                position: new vscode.Position(selection.line, 0),
-                uri: activeUri,
-                breakpointId: breakpoint.id,
-                shouldContinue: true,
-            } as IExpressionTalkpoint);
-            vscode.debug.addBreakpoints([breakpoint]);
-            vscode.window.showInformationMessage(`Added talkpoint to line ${selection.line}.`);
-        }
-        this._internalEvents.emit('talkpoints.changed');
-    }
-
-    /**
-     * Load initial talkpoints for the workspace after the first breakpoint create message is received.
-     */
-    private loadInitialTalkpoints(breakpoints: readonly vscode.Breakpoint[]) {
-        // First time breakpoints are loaded this session, need to update talkpoints with new breakpoint ids
-        if (!this._breakpointsLoaded) {
-            const talkpointsByFileLine : Record<string, ITalkpoint> = [...this._talkPoints.entries()]
-                .reduce((map, [_, talkpoint]) => {
-                    map[talkpoint.uri.path + ";" + talkpoint.position.line] = talkpoint;
-                    return map;
-                }, {});
-
-            this._talkPoints.clear();
-            breakpoints.forEach(breakpoint => {
-                const sourceBreakpoint = breakpoint as SourceBreakpoint;
-                const filePath = sourceBreakpoint.location.uri.path;
-                const line = sourceBreakpoint.location.range.start.line;
-                const talkpoint = talkpointsByFileLine[filePath + ";" +line];
-                if (talkpoint) {
-                    talkpoint.breakpointId = breakpoint.id;
-                    this._talkPoints.set(breakpoint.id, talkpoint);
-                }
-            });
-            this._breakpointsLoaded = true;
-            this._internalEvents.emit('talkpoints.changed');
-        }
-    }
-
-    /**
-     * Render talkpoint decorations next to the line with the breakpoint.
-     * Debounced so it only runs at most once a second.
-     */
-    private renderTalkpointDecorations = debounce(() => {
-        let editor = vscode.window.activeTextEditor;
-        if (editor) {
-            let decorationsArray: vscode.DecorationOptions[] = [];
-            let code = editor.document.getText();
-            let lines = code.split(editor.document.eol == vscode.EndOfLine.LF ? '\n' : '\r\n');
-
-            const breakpointsWithTalkpoints = vscode.debug.breakpoints.map(b => b as SourceBreakpoint)
-                .filter(b => b.location.uri.path === editor.document.uri.path)
-                .filter(b => this._talkPoints.has(b.id));
-
-            for (const breakpoint of breakpointsWithTalkpoints) {
-                const talkpoint = this._talkPoints.get(breakpoint.id);
-
-                if (talkpoint) {
-                    const endOfTalkpointLine = lines[talkpoint.position.line].length;
-                    const range = new vscode.Range(
-                        new vscode.Position(talkpoint.position.line, 0),
-                        new vscode.Position(talkpoint.position.line, endOfTalkpointLine))
-                    const decoration = { range }
-                    decorationsArray.push(decoration);
-                }
-            }
-            editor?.setDecorations(this._talkPointDecoration, decorationsArray);
-        }
-    }, 1000, true);
-
-    /**
      * Get the URI for the current active text editor
      * @return
      */
@@ -665,17 +501,6 @@ export default class CodeTalkController implements vscode.Disposable {
         if (typeof vscode.window.activeTextEditor !== 'undefined' &&
             typeof vscode.window.activeTextEditor.document !== 'undefined') {
             return vscode.window.activeTextEditor.document.uri;
-        }
-        return undefined;
-    }
-
-    /**
-     * Get the URI string for the current active text editor
-     */
-    private getActiveTextEditorUriString(): string {
-        if (typeof vscode.window.activeTextEditor !== 'undefined' &&
-            typeof vscode.window.activeTextEditor.document !== 'undefined') {
-            return vscode.window.activeTextEditor.document.uri.toString(true);
         }
         return undefined;
     }
