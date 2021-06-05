@@ -69,8 +69,14 @@ gulp.task('ext:copy-js', () => {
         .pipe(gulp.dest(config.paths.project.root + '/out/src'))
 });
 
+gulp.task('ext:copy-assets', () => {
+    return gulp.src([
+            config.paths.project.root + '/src/assets/**/*'])
+        .pipe(gulp.dest(config.paths.project.root + '/out/src/assets'))
+});
+
 // Copy the files which aren't used in compilation
-gulp.task('ext:copy', gulp.series('ext:copy-js'));
+gulp.task('ext:copy', gulp.series('ext:copy-js', 'ext:copy-assets'));
 
 gulp.task('ext:build', gulp.series('ext:copy', 'ext:compile')); // removed lint before copy
 

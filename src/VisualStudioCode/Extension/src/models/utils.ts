@@ -13,8 +13,6 @@ import vscode = require('vscode');
 const configTracingLevel = 'tracingLevel';
 const configLogRetentionMinutes = 'logRetentionMinutes';
 const configLogFilesRemovalLimit = 'logFilesRemovalLimit';
-// const extensionConfigSectionName = 'mssql';
-// const configLogDebugInfo = 'logDebugInfo';
 
 // Return 'true' if the active editor window has a .sql file, false otherwise
 export function isEditingSqlFile(): boolean {
@@ -26,6 +24,11 @@ export function isEditingSqlFile(): boolean {
         }
     }
     return sqlFile;
+}
+
+export const asyncFilter = async (arr: Object[], predicate: (...args: any[]) => Promise<boolean>) => {
+    const results = await Promise.all(arr.map(predicate));
+    return arr.filter((_v, index) => results[index]);
 }
 
 // Return the active text editor if there's one
@@ -46,7 +49,7 @@ export function getActiveTextEditorUri(): string {
     return '';
 }
 
-// Helper to log messages to "MSSQL" output channel
+// Helper to log messages to "Code Talk" output channel
 export function logToOutputChannel(msg: any): void {
     let outputChannel = vscode.window.createOutputChannel('Code Talk');
     outputChannel.show();
