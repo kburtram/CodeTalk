@@ -386,7 +386,7 @@ export default class CodeTalkController implements vscode.Disposable {
                 position: new vscode.Position(selection.line, 0),
                 uri: activeUri,
                 breakpointId: breakpoint.id,
-                shouldContinue: true,
+                shouldContinue: state.shouldContinue,
             } as ITonalTalkpoint | ITextTalkpoint | IExpressionTalkpoint);
             vscode.debug.addBreakpoints([breakpoint]);
             vscode.window.showInformationMessage(`Added talkpoint to line ${selection.line}.`);
