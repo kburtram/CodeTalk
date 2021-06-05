@@ -5,10 +5,47 @@
 
 'use strict';
 
+import { Position, Uri } from "vscode";
+
+
+export interface TalkpointBase {
+    breakpointId: string;
+    position: Position;
+    uri: Uri;
+    shouldContinue: boolean;
+}
+
+export interface ITonalTalkpoint extends TalkpointBase {
+    type: "Tonal";
+    sound: string,
+}
+
+export interface ITextTalkpoint extends TalkpointBase {
+    type: "Text";
+    text: string,
+}
+
+export interface IExpressionTalkpoint extends TalkpointBase {
+    type: "Expression";
+    expression: string,
+}
+
+export type ITalkpoint = ITonalTalkpoint | ITextTalkpoint | IExpressionTalkpoint;
+
 export interface ILogger {
     logDebug(message: string): void;
     increaseIndent(): void;
     decreaseIndent(): void;
     append(message?: string): void;
     appendLine(message?: string): void;
+}
+
+export interface IErrorSettings {
+    enableErrorDetection: boolean;
+    errorDetectionInterval: number;
+    customErrorSound: string;
+}
+
+export interface ITalkpointSettings {
+    customBreakpointSound: string
 }

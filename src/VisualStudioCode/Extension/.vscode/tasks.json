@@ -1,22 +1,16 @@
 {
     // See https://go.microsoft.com/fwlink/?LinkId=733558
     // for the documentation about the tasks.json format
-    "version": "2.0.0",
-    "command": "gulp",
-    "args": [
-        "--no-color"
-    ],
     "tasks": [
         {
-            "label": "compile",
-            "type": "gulp",
-            "task": "--no-color",
-            "problemMatcher": [
-                "$lessCompile",
-                "$tsc",
-                "$jshint"
-            ],
-            "group": "build"
+            "type": "npm",
+            "script": "compile",
+            "label": "run: compile",
+            "detail": "node --max_old_space_size=8192 ./node_modules/gulp/bin/gulp.js compile",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
         }
     ]
 }

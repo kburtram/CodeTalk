@@ -1,21 +1,30 @@
 // A launch configuration that compiles the extension and then opens it inside a new window
 {
     "version": "0.1.0",
+    "resolveSourceMapLocations": [
+        "${workspaceFolder}/**",
+        "!**/node_modules/**"
+    ],
     "configurations": [
         {
             "name": "Launch Extension",
             "type": "extensionHost",
             "request": "launch",
+            "preLaunchTask": "run: compile",
             "runtimeExecutable": "${execPath}",
-            "args": ["--extensionDevelopmentPath=${workspaceRoot}" ],
+            "args": [
+                "--extensionDevelopmentPath=${workspaceRoot}"
+            ],
             "stopOnEntry": false,
             "sourceMaps": true,
-            "outFiles": ["${workspaceRoot}/out/src/**/*.js"]
+            "outFiles": [
+                "${workspaceRoot}/out/src/**/*.js"
+            ]
         },
         {
-            "type": "node",
+            "type": "pwa-node",
             "request": "launch",
-            "name": "Gulp task",
+            "name": "Compile Extension",
             "program": "${workspaceRoot}/node_modules/gulp/bin/gulp.js",
             "args": [
                 "compile"

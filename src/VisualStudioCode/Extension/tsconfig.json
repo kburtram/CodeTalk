@@ -1,6 +1,7 @@
 {
     "compileOnSave": true,
     "compilerOptions": {
+        "typeRoots": ["./node_modules/@types", "./typings"],
         "outDir": "./out/",
         "module": "commonjs",
         "target": "ES6",
