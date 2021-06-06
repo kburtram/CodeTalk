@@ -75,7 +75,7 @@ export class CurrentContextProvider implements vscode.TreeDataProvider<ContextNo
     public getParent?(element: ContextNode): vscode.ProviderResult<ContextNode> {
         const pos = this.currentContextNodes.indexOf(element);
         if (pos <= 0) {
-            return null;
+            return undefined;
         }
         return this.currentContextNodes[pos - 1];
     }

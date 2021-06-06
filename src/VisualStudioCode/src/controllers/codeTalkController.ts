@@ -123,25 +123,22 @@ export default class CodeTalkController implements vscode.Disposable {
             this.registerCommand('codeTalk.removeAllTalkpoints');
             this.registerCommandWithArgs('codeTalk.functionListNavigate');
 
-            this._event.on('codeTalk.showFunctions', async (textEditor: vscode.TextEditor) => {
-                this.handleShowFunctions(true);
-            });
-
-            vscode.window.onDidChangeActiveTextEditor(async (params) => {
-                this.handleShowFunctions(false);
-            });
-
+            this._event.on('codeTalk.showContext', this.handleShowContext.bind(this));
+            this._event.on('codeTalk.showFunction', this.handleShowFunctions.bind(this));
+            this._event.on('codeTalk.moveToParent', this.handleMoveToParent.bind(this));
+            this._event.on('codeTalk.addTalkpoint', this.handleAddTalkpoint.bind(this));
+            this._event.on('codeTalk.removeAllTalkpoints', this.handleRemoveAllTalkpoints.bind(this));
             this._event.on('codeTalk.functionListNavigate', async (node: FunctionListNode) => {
                 this._functionListProvider.navigateToFunction(node);
             });
 
-            this._event.on('codeTalk.showContext', this.handleShowContext.bind(this));
-            this._event.on('codeTalk.moveToParent', this.handleMoveToParent.bind(this));
-            this._event.on('codeTalk.addTalkpoint', this.handleAddTalkpoint.bind(this));
-            this._event.on('codeTalk.removeAllTalkpoints', this.handleRemoveAllTalkpoints.bind(this));
             this._internalEvents.on('talkpoints.changed', async () => {
                 this.saveTalkpoints(); // don't need to block on save, even though this returns promise
                 this.renderTalkpointDecorations();
+            });
+
+            vscode.window.onDidChangeActiveTextEditor(async (editor: vscode.TextEditor) => {
+                this.handleShowFunctions(editor, false);
             });
 
             // Keep hold of dispose handler, so that we can re-register after user config change
@@ -162,7 +159,7 @@ export default class CodeTalkController implements vscode.Disposable {
                 vscode.debug.registerDebugAdapterTrackerFactory('*', this.createDebugAdapterTrackerFactory()),
             );
 
-            this.handleShowFunctions(false);
+            this.handleShowFunctions(vscode.window.activeTextEditor, false);
             return true;
         }
     }
@@ -175,7 +172,6 @@ export default class CodeTalkController implements vscode.Disposable {
      * Initializes the extension
      */
     public async initialize(): Promise<boolean> {
-
         this._outputChannel = createOutputChannel();
         await this.loadSettings();
 
@@ -185,10 +181,6 @@ export default class CodeTalkController implements vscode.Disposable {
         });
 
         this._currentContextProvider = new CurrentContextProvider();
-        this._currentContextProvider.onDidChangeTreeData((d) => {
-            console.log(d);
-        });
-
         this._currentContextTreeView = vscode.window.createTreeView('codeTalkCurrentContext', {
             treeDataProvider: this._currentContextProvider
         });
@@ -303,8 +295,8 @@ export default class CodeTalkController implements vscode.Disposable {
         this._internalEvents.emit('talkpoints.changed');
     }
 
-    private async handleShowFunctions(setFocus: boolean): Promise<boolean> {
-        let ownerUri: vscode.Uri = this.getActiveTextEditorUri();
+    private async handleShowFunctions(editor: vscode.TextEditor, setFocus: boolean): Promise<boolean> {
+        const ownerUri = editor?.document?.uri;
         if (ownerUri) {
             let symbols: vscode.DocumentSymbol[] = await vscode.commands.executeCommand(
                 'vscode.executeDocumentSymbolProvider',
