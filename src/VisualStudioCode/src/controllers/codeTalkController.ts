@@ -127,10 +127,6 @@ export default class CodeTalkController implements vscode.Disposable {
                 this.handleShowFunctions(true);
             });
 
-            vscode.window.onDidChangeActiveTextEditor(async (params) => {
-                this.handleShowFunctions(false);
-            });
-
             this._event.on('codeTalk.functionListNavigate', async (node: FunctionListNode) => {
                 this._functionListProvider.navigateToFunction(node);
             });
@@ -139,6 +135,7 @@ export default class CodeTalkController implements vscode.Disposable {
             this._event.on('codeTalk.moveToParent', this.handleMoveToParent.bind(this));
             this._event.on('codeTalk.addTalkpoint', this.handleAddTalkpoint.bind(this));
             this._event.on('codeTalk.removeAllTalkpoints', this.handleRemoveAllTalkpoints.bind(this));
+
             this._internalEvents.on('talkpoints.changed', async () => {
                 this.saveTalkpoints(); // don't need to block on save, even though this returns promise
                 this.renderTalkpointDecorations();
@@ -156,6 +153,7 @@ export default class CodeTalkController implements vscode.Disposable {
                         await this.loadSettings(); //reload if changed
                     }
                 }),
+                vscode.window.onDidChangeActiveTextEditor(this.handleShowFunctions.bind(this)),
                 vscode.workspace.onDidOpenTextDocument(this.renderTalkpointDecorations.bind(this)),
                 vscode.workspace.onDidChangeTextDocument(this.renderTalkpointDecorations.bind(this)),
                 vscode.debug.onDidChangeBreakpoints(this.handleChangeBreakpointsEvent.bind(this)),
@@ -185,10 +183,6 @@ export default class CodeTalkController implements vscode.Disposable {
         });
 
         this._currentContextProvider = new CurrentContextProvider();
-        this._currentContextProvider.onDidChangeTreeData((d) => {
-            console.log(d);
-        });
-
         this._currentContextTreeView = vscode.window.createTreeView('codeTalkCurrentContext', {
             treeDataProvider: this._currentContextProvider
         });
@@ -271,7 +265,9 @@ export default class CodeTalkController implements vscode.Disposable {
                 const activeUri: vscode.Uri = this.getActiveTextEditorUri();
                 for (const uri of e.uris) {
                     if (activeUri?.path === uri.path) {
-                        let currentDiagnostics: vscode.Diagnostic[] = vscode.languages.getDiagnostics(uri);
+                        let currentDiagnostics: vscode.Diagnostic[] = vscode.languages.getDiagnostics(uri)
+                            .filter((d) => d.severity !==  vscode.DiagnosticSeverity.Hint);
+
                         if (currentDiagnostics.length > this._previousDiagnostics?.length) {
                             play(this._errorSoundBuffer, {}, undefined);
                         }
@@ -421,7 +417,6 @@ export default class CodeTalkController implements vscode.Disposable {
                 }
 
                 if (immediateParent) {
-                    // editor.selections = [new vscode.Selection(immediateParent.range.start, immediateParent.range.start)];
                     vscode.commands.executeCommand('vscode.open', activeUri, {
                         selection: new vscode.Range(immediateParent.range.start, immediateParent.range.start)
                     });
@@ -441,7 +436,6 @@ export default class CodeTalkController implements vscode.Disposable {
      */
     private findImmediateParentOf(position: vscode.Position, parent: vscode.DocumentSymbol): vscode.DocumentSymbol | null {
         // Is immediate if contains position AND has no children that contain the position
-
         if (parent &&
             parent.range.contains(position) &&
             parent.range.start.line != position.line) {
@@ -515,7 +509,7 @@ export default class CodeTalkController implements vscode.Disposable {
             const existingBreakpoints = vscode.debug.breakpoints
                 .map(b => b as vscode.SourceBreakpoint)
                 .filter(b => b?.location.range.start.line === selection.line &&
-                    activeUri.path === b?.location.uri.path);
+                    activeUri.fsPath === b?.location.uri.fsPath);
 
             let breakpoint: vscode.SourceBreakpoint;
             if (existingBreakpoints.length > 0) {
@@ -541,16 +535,15 @@ export default class CodeTalkController implements vscode.Disposable {
         if (this._talkPoints.has(breakpoint.id)) {
             this.removeTalkpoints([breakpoint]);
             vscode.debug.removeBreakpoints([breakpoint]);
-            // Talkpoint doesn't exist, so launch creation experience
         } else {
+            // Talkpoint doesn't exist, so launch creation experience
             const state: ITalkpointCreationState = await showTalkpointCreationSteps();
 
             if (state.dismissedEarly) {
                 vscode.window.showWarningMessage('Dismissed talkpoint creation.');
                 return;
             }
-
-            this._talkPoints.set(breakpoint.id, {
+            const talkpoint : ITalkpoint = {
                 type: state.type,
                 text: state.text,
                 expression: state.expression,
@@ -559,7 +552,8 @@ export default class CodeTalkController implements vscode.Disposable {
                 uri: activeUri,
                 breakpointId: breakpoint.id,
                 shouldContinue: state.shouldContinue,
-            } as ITonalTalkpoint | ITextTalkpoint | IExpressionTalkpoint);
+            };
+            this._talkPoints.set(breakpoint.id, talkpoint);
             vscode.debug.addBreakpoints([breakpoint]);
             vscode.window.showInformationMessage(`Added talkpoint to line ${selection.line + 1}.`);
         }
@@ -574,7 +568,7 @@ export default class CodeTalkController implements vscode.Disposable {
         if (!this._breakpointsLoaded) {
             const talkpointsByFileLine: Record<string, ITalkpoint> = [...this._talkPoints.entries()]
                 .reduce((map, [_, talkpoint]) => {
-                    map[talkpoint.uri.path + ';' + talkpoint.position.line] = talkpoint;
+                    map[talkpoint.uri.fsPath + ';' + talkpoint.position.line] = talkpoint;
                     return map;
                 }, {});
 
@@ -582,7 +576,7 @@ export default class CodeTalkController implements vscode.Disposable {
             breakpoints.forEach(breakpoint => {
                 const sourceBreakpoint = breakpoint as vscode.SourceBreakpoint;
                 if (sourceBreakpoint) {
-                    const filePath = sourceBreakpoint.location.uri.path;
+                    const filePath = sourceBreakpoint.location.uri.fsPath;
                     const line = sourceBreakpoint.location.range.start.line;
                     const talkpoint = talkpointsByFileLine[filePath + ';' + line];
                     if (talkpoint) {
@@ -608,7 +602,7 @@ export default class CodeTalkController implements vscode.Disposable {
             let lines = code.split(editor.document.eol == vscode.EndOfLine.LF ? '\n' : '\r\n');
 
             const breakpointsWithTalkpoints = vscode.debug.breakpoints.map(b => b as vscode.SourceBreakpoint)
-                .filter(b => b.location.uri.path === editor.document.uri.path)
+                .filter(b => b.location.uri.fsPath === editor.document.uri.fsPath)
                 .filter(b => this._talkPoints.has(b.id));
 
             for (const breakpoint of breakpointsWithTalkpoints) {
@@ -638,24 +632,24 @@ export default class CodeTalkController implements vscode.Disposable {
                         }
                         if (m?.type === 'event' && m.event === 'stopped' &&
                             (m.body?.reason === 'breakpoint' || m.body?.reason === 'step')) {
-
                             // Get current stack details to be able to find corresponding breakpoint
                             const stack = await session.customRequest('stackTrace', { threadId: m.body.threadId, startFrame: 0 });
                             const currentFrame = stack.stackFrames[0];
 
                             const sourceBreakpoints = vscode.debug.breakpoints.map(b => b as vscode.SourceBreakpoint);
-                            const matchedBreakpoints = await asyncFilter(sourceBreakpoints, async (b) => {
+                            const matchedBreakpoints= await asyncFilter(sourceBreakpoints, async (b) => {
                                 // Get debugger's breakpoint's version of line number,
                                 // since breakpoint is sometimes moved to another line by debugger (such as up a line from a brace)
                                 let debugBreakpoint = await session.getDebugProtocolBreakpoint(b);
                                 let debugBreakpointLine = (debugBreakpoint as any)?.line;
-                                return b.location.uri.path === vscode.Uri.file(currentFrame.source.path).path &&
+                                return b.location.uri.fsPath === vscode.Uri.file(currentFrame.source.path).fsPath
+                                 &&
                                     debugBreakpointLine === currentFrame.line
                             });
 
                             matchedBreakpoints.forEach(async (b: vscode.Breakpoint) => {
                                 if (this._talkPoints.has(b.id)) {
-                                    const talkpoint = this._talkPoints.get(b.id);
+                                    const talkpoint: ITalkpoint = this._talkPoints.get(b.id);
                                     let message: string;
 
                                     switch (talkpoint.type) {
@@ -666,6 +660,9 @@ export default class CodeTalkController implements vscode.Disposable {
                                             message = 'Text Talkpoint Hit: ' + talkpoint.text;
                                             vscode.window.showInformationMessage(message);
                                             logToOutputChannel(this._outputChannel, message);
+                                            vscode.commands.executeCommand('cursorMove', {
+                                                to: "up"
+                                            })
                                             break;
                                         case 'Expression':
                                             const expressionTalkpoint = talkpoint;
@@ -680,6 +677,9 @@ export default class CodeTalkController implements vscode.Disposable {
                                             }
                                             vscode.window.showInformationMessage(message);
                                             logToOutputChannel(this._outputChannel, message);
+                                            vscode.commands.executeCommand('cursorMove', {
+                                                to: "up"
+                                            })
                                             break;
                                         default:
                                             vscode.window.showErrorMessage('Unrecognized Talkpoint: ' + talkpoint);
