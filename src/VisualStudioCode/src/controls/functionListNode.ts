@@ -32,6 +32,7 @@ export class FunctionListNode extends vscode.TreeItem {
     ) {
         super(_functionInfo.spokenText, vscode.TreeItemCollapsibleState.None);
         this.tooltip = _functionInfo.displayText;
+        this.iconPath = new vscode.ThemeIcon("wrench");
         this.contextValue = FunctionListNode.contextValue;
     }
 
