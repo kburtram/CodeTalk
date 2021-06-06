@@ -139,6 +139,10 @@
         {
           "id": "codeTalkFunctionList",
           "name": "Function List"
+        },
+        {
+          "id": "codeTalkCurrentContext",
+          "name": "Current Context"
         }
       ]
     },

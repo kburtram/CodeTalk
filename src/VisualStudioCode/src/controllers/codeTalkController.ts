@@ -6,6 +6,7 @@
 'use strict';
 
 import { FunctionInfo, FunctionListProvider } from '../controls/functionListProvider';
+import { ContextInfo, CurrentContextProvider } from '../controls/currentContextProvider';
 import { FunctionListNode } from '../controls/functionListNode';
 import { IErrorSettings, IExpressionTalkpoint, ITalkpoint, ITalkpointSettings, ITextTalkpoint, ITonalTalkpoint } from '../models/interfaces';
 import { asyncFilter, createOutputChannel, logToOutputChannel } from '../models/utils';
@@ -28,6 +29,8 @@ export default class CodeTalkController implements vscode.Disposable {
     private _outputChannel: vscode.OutputChannel;
     private _functionListProvider: FunctionListProvider;
     private _functionListTreeView: vscode.TreeView<any>;
+    private _currentContextProvider: CurrentContextProvider;
+    private _currentContextTreeView: vscode.TreeView<any>;
 
     private _errorSettings: IErrorSettings;
     private _defaultErrorBeepSound: string = `${__dirname}/../assets/errorBeep.wav`;
@@ -132,10 +135,7 @@ export default class CodeTalkController implements vscode.Disposable {
                 this._functionListProvider.navigateToFunction(node);
             });
 
-            this._event.on('codeTalk.showContext', async (textEditor: vscode.TextEditor) => {
-                // TO-DO
-            });
-
+            this._event.on('codeTalk.showContext', this.handleShowContext.bind(this));
             this._event.on('codeTalk.moveToParent', this.handleMoveToParent.bind(this));
             this._event.on('codeTalk.addTalkpoint', this.handleAddTalkpoint.bind(this));
             this._event.on('codeTalk.removeAllTalkpoints', this.handleRemoveAllTalkpoints.bind(this));
@@ -183,7 +183,20 @@ export default class CodeTalkController implements vscode.Disposable {
         this._functionListTreeView = vscode.window.createTreeView('codeTalkFunctionList', {
             treeDataProvider: this._functionListProvider
         });
-        this._context.subscriptions.push(this._functionListTreeView);
+
+        this._currentContextProvider = new CurrentContextProvider();
+        this._currentContextProvider.onDidChangeTreeData((d) => {
+            console.log(d);
+        });
+
+        this._currentContextTreeView = vscode.window.createTreeView('codeTalkCurrentContext', {
+            treeDataProvider: this._currentContextProvider
+        });
+
+        this._context.subscriptions.push(
+            this._functionListTreeView,
+            this._currentContextTreeView,
+        );
 
         this._initialized = true;
         return true;
@@ -308,6 +321,83 @@ export default class CodeTalkController implements vscode.Disposable {
             }
         }
         return true;
+    }
+
+    private buildContextInfo(symbols: vscode.DocumentSymbol[], current: vscode.Position) : ContextInfo[] {
+        if (!symbols || symbols.length === 0) {
+            return [];
+        }
+
+        let result : ContextInfo[] = []
+        for (let i = 0; i < symbols.length; ++i) {
+            let displayText = symbols[i].name + ' at line ' + (symbols[i].range.start.line + 1);
+            let spokenText = vscode.SymbolKind[symbols[i].kind] + ' ' + displayText
+            let current = {
+                name: symbols[i].name,
+                kind: symbols[i].kind,
+                displayText: displayText,
+                spokenText: spokenText,
+                line: symbols[i].range.start.line + 1,
+            };
+            result.push(current);
+        }
+
+        // Always start context from current position
+        let text = `Current position at line ${current.line + 1}`;
+        result.push({
+            name: "Current position",
+            kind: undefined,
+            displayText: text,
+            spokenText: text,
+            line: current.line,
+        });
+        return result;
+    }
+
+    private async handleShowContext(editor: vscode.TextEditor): Promise<boolean> {
+        const activeUri = editor?.document?.uri;
+        const position = editor?.selection?.anchor;
+        let context: vscode.DocumentSymbol[] = [];
+
+        if (activeUri && position) {
+            let symbols: vscode.DocumentSymbol[] = await vscode.commands.executeCommand(
+                'vscode.executeDocumentSymbolProvider',
+                activeUri);
+
+            if (symbols) {
+                for (const symbol of symbols) {
+                    this.findContextOf(position, symbol, context);
+                    if (context.length > 0) {
+                        break;
+                    }
+                }
+            }
+
+            if (context.length > 0) {
+                const contextList = this.buildContextInfo(context, position);
+                this._currentContextProvider.updateCurrentContext(this._currentContextTreeView, activeUri, contextList);
+
+                return true;
+            } else {
+                vscode.window.showErrorMessage("Could not find context.");
+            }
+        }
+        return false;
+    }
+
+    private findContextOf(position: vscode.Position, parent: vscode.DocumentSymbol,
+        context: vscode.DocumentSymbol[]) : void {
+        if (parent && parent.range.contains(position)) {
+
+            // Add to top of context
+            context.push(parent);
+
+            if (parent.children) {
+                for (const child of parent.children) {
+                    this.findContextOf(position, child, context);
+                }
+            }
+        }
     }
 
     private async handleMoveToParent(editor: vscode.TextEditor): Promise<void> {
@@ -540,6 +630,7 @@ export default class CodeTalkController implements vscode.Disposable {
                 return {
                     onDidSendMessage: async (m) => {
                         if (m?.type === 'event' && m.event === 'initialized') {
+                            // Start new output channel for new debug session
                             this._outputChannel.clear();
                         }
                         if (m?.type === 'event' && m.event === 'stopped' &&
@@ -582,7 +673,6 @@ export default class CodeTalkController implements vscode.Disposable {
                                                 });
                                                 message = 'Expression Talkpoint Hit: ' + response.result;
                                             } catch (error) {
-                                                console.log(error);
                                                 message = 'Expression Talkpoint Invalid: ' + error;
                                             }
                                             vscode.window.showInformationMessage(message);
