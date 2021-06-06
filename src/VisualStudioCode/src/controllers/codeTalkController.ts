@@ -337,7 +337,7 @@ export default class CodeTalkController implements vscode.Disposable {
                 kind: symbols[i].kind,
                 displayText: displayText,
                 spokenText: spokenText,
-                line: symbols[i].range.start.line + 1,
+                line: symbols[i].range.start.line,
             };
             result.push(current);
         }
