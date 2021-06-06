@@ -23,7 +23,8 @@ export class FunctionListProvider implements vscode.TreeDataProvider<any> {
     constructor() {
     }
 
-    public updateFunctionList(treeView: vscode.TreeView<any>, uri: string, functions: FunctionInfo[]): void {
+    public updateFunctionList(treeView: vscode.TreeView<any>, uri: string,
+            functions: FunctionInfo[], setFocus: boolean): void {
         if (functions && functions.length > 0) {
             let currentLine: number = 0;
             const activeTextEditor = vscode.window.activeTextEditor;
@@ -44,11 +45,11 @@ export class FunctionListProvider implements vscode.TreeDataProvider<any> {
                 }
             }
             this._onDidChangeTreeData.fire(undefined);
-            treeView.reveal(selectedNode, { focus: true });
+            treeView.reveal(selectedNode, { focus: setFocus });
         } else {
             this._functionListNodes = [new EmptyFunctionListNode()];
             this._onDidChangeTreeData.fire(undefined);
-            treeView.reveal(this._functionListNodes[0], { focus: true });
+            treeView.reveal(this._functionListNodes[0], { focus: setFocus });
         }
     }
 

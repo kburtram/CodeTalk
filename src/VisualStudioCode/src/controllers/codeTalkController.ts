@@ -121,7 +121,11 @@ export default class CodeTalkController implements vscode.Disposable {
             this.registerCommandWithArgs('codeTalk.functionListNavigate');
 
             this._event.on('codeTalk.showFunctions', async (textEditor: vscode.TextEditor) => {
-                this.handleShowFunctions();
+                this.handleShowFunctions(true);
+            });
+
+            vscode.window.onDidChangeActiveTextEditor(async (params) => {
+                this.handleShowFunctions(false);
             });
 
             this._event.on('codeTalk.functionListNavigate', async (node: FunctionListNode) => {
@@ -157,6 +161,8 @@ export default class CodeTalkController implements vscode.Disposable {
                 vscode.debug.onDidChangeBreakpoints(this.handleChangeBreakpointsEvent.bind(this)),
                 vscode.debug.registerDebugAdapterTrackerFactory('*', this.createDebugAdapterTrackerFactory()),
             );
+
+            this.handleShowFunctions(false);
             return true;
         }
     }
@@ -289,7 +295,7 @@ export default class CodeTalkController implements vscode.Disposable {
         this._internalEvents.emit('talkpoints.changed');
     }
 
-    private async handleShowFunctions(): Promise<boolean> {
+    private async handleShowFunctions(setFocus: boolean): Promise<boolean> {
         let ownerUri: vscode.Uri = this.getActiveTextEditorUri();
         if (ownerUri) {
             let symbols: vscode.DocumentSymbol[] = await vscode.commands.executeCommand(
@@ -302,7 +308,8 @@ export default class CodeTalkController implements vscode.Disposable {
                 this._functionListProvider.updateFunctionList(
                     this._functionListTreeView,
                     ownerUri.toString(true),
-                    functionList);
+                    functionList,
+                    setFocus);
             }
         }
         return true;
