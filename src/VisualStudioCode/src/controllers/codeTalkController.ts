@@ -9,7 +9,7 @@ import { FunctionInfo, FunctionListProvider } from '../controls/functionListProv
 import { IErrorSettings, IExpressionTalkpoint, ITalkpoint, ITalkpointSettings, ITextTalkpoint, ITonalTalkpoint } from '../models/interfaces';
 import { asyncFilter } from '../models/utils';
 import { ITalkpointCreationState, showTalkpointCreationSteps } from '../models/talkpointMenu';
-import { contains, debounce } from 'underscore';
+import { debounce } from 'underscore';
 
 import * as events from 'events';
 import * as vscode from 'vscode';
@@ -85,6 +85,8 @@ export default class CodeTalkController implements vscode.Disposable {
      * Deactivates the extension
      */
     public async deactivate(): Promise<void> {
+        this._event.removeAllListeners();
+        this._internalEvents.removeAllListeners();
     }
 
     /**
@@ -327,13 +329,16 @@ export default class CodeTalkController implements vscode.Disposable {
     private findImmediateParentOf(position: vscode.Position, parent: vscode.DocumentSymbol) : vscode.DocumentSymbol | null {
         // Is immediate if contains position AND has no children that contain the position
 
-        if (parent.range.contains(position) &&
+        if (parent &&
+            parent.range.contains(position) &&
             parent.range.start.line != position.line) {
 
-            for (const child of parent.children) {
-                const result = this.findImmediateParentOf(position, child)
-                if (result) {
-                    return result;
+            if (parent.children) {
+                for (const child of parent.children) {
+                    const result = this.findImmediateParentOf(position, child)
+                    if (result) {
+                        return result;
+                    }
                 }
             }
 
