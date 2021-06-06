@@ -23,18 +23,34 @@ export class FunctionListProvider implements vscode.TreeDataProvider<any> {
     constructor() {
     }
 
-    public updateFunctionList(treeView: vscode.TreeView<any>, uri: string, functions: FunctionInfo[]): void {
+    public updateFunctionList(treeView: vscode.TreeView<any>, uri: string,
+            functions: FunctionInfo[], setFocus: boolean): void {
         if (functions && functions.length > 0) {
+            let currentLine: number = 0;
+            const activeTextEditor = vscode.window.activeTextEditor;
+            if (activeTextEditor) {
+                currentLine = activeTextEditor.selection.active.line;
+            }
+
+            let selectedNode = new FunctionListNode(uri, functions[0]);
             this._functionListNodes = [];
-            for (let i = 0; i < functions.length; ++i) {
+            this._functionListNodes.push(selectedNode);
+            for (let i = 1; i < functions.length; ++i) {
                 let node = new FunctionListNode(uri, functions[i]);
                 this._functionListNodes.push(node);
+                let currentDist: number = Math.abs(node.functionInfo.line - currentLine);
+                let functionDist: number = Math.abs(selectedNode.functionInfo.line - currentLine);
+                if (currentDist < functionDist) {
+                    selectedNode = node;
+                }
             }
+            this._onDidChangeTreeData.fire(undefined);
+            treeView.reveal(selectedNode, { focus: setFocus });
         } else {
             this._functionListNodes = [new EmptyFunctionListNode()];
+            this._onDidChangeTreeData.fire(undefined);
+            treeView.reveal(this._functionListNodes[0], { focus: setFocus });
         }
-        this._onDidChangeTreeData.fire(undefined);
-        treeView.reveal(this._functionListNodes[0], { focus: true });
     }
 
     clearAll(): void {
@@ -47,6 +63,11 @@ export class FunctionListProvider implements vscode.TreeDataProvider<any> {
     }
 
     public getTreeItem(node: FunctionListNode): FunctionListNode {
+        node.command = {
+            command: 'codeTalk.functionListNavigate',
+            title: "Navigate To Symbol",
+            arguments: [node]
+         };
         return node;
     }
 

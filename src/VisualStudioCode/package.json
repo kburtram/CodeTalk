@@ -196,7 +196,6 @@
 					"command": "codeTalk.functionListNavigate",
 					"group": "inline",
           "when": "view == codeTalkFunctionList"
-
 				}
 			]
 		},

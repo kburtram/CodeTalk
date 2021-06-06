@@ -44,7 +44,7 @@ export default class CodeTalkController implements vscode.Disposable {
     private _talkPointDecoration = vscode.window.createTextEditorDecorationType({
         isWholeLine: true,
         after: {
-            contentText: "   Talkpoint Enabled".replace(/ /g, '\u00a0'),
+            contentText: '   Talkpoint Enabled'.replace(/ /g, '\u00a0'),
             fontStyle: 'normal',
             fontWeight: 'normal',
             color: new vscode.ThemeColor('editorLineNumber.foreground'),
@@ -123,7 +123,14 @@ export default class CodeTalkController implements vscode.Disposable {
             this.registerCommand('codeTalk.removeAllTalkpoints');
             this.registerCommandWithArgs('codeTalk.functionListNavigate');
 
-            this._event.on('codeTalk.showFunctions', this.handleShowFunctions.bind(this));
+            this._event.on('codeTalk.showFunctions', async (textEditor: vscode.TextEditor) => {
+                this.handleShowFunctions(true);
+            });
+
+            vscode.window.onDidChangeActiveTextEditor(async (params) => {
+                this.handleShowFunctions(false);
+            });
+
             this._event.on('codeTalk.functionListNavigate', async (node: FunctionListNode) => {
                 this._functionListProvider.navigateToFunction(node);
             });
@@ -154,6 +161,8 @@ export default class CodeTalkController implements vscode.Disposable {
                 vscode.debug.onDidChangeBreakpoints(this.handleChangeBreakpointsEvent.bind(this)),
                 vscode.debug.registerDebugAdapterTrackerFactory('*', this.createDebugAdapterTrackerFactory()),
             );
+
+            this.handleShowFunctions(false);
             return true;
         }
     }
@@ -298,8 +307,8 @@ export default class CodeTalkController implements vscode.Disposable {
         this._internalEvents.emit('talkpoints.changed');
     }
 
-    private async handleShowFunctions(textEditor: vscode.TextEditor): Promise<boolean> {
-        let ownerUri = textEditor?.document.uri;
+    private async handleShowFunctions(setFocus: boolean): Promise<boolean> {
+        let ownerUri: vscode.Uri = this.getActiveTextEditorUri();
         if (ownerUri) {
             let symbols: vscode.DocumentSymbol[] = await vscode.commands.executeCommand(
                 'vscode.executeDocumentSymbolProvider',
@@ -311,7 +320,8 @@ export default class CodeTalkController implements vscode.Disposable {
                 this._functionListProvider.updateFunctionList(
                     this._functionListTreeView,
                     ownerUri.toString(true),
-                    functionList);
+                    functionList,
+                    setFocus);
             }
         }
         return true;
