@@ -56,7 +56,7 @@ export default class CodeTalkController implements vscode.Disposable {
      */
     constructor(context: vscode.ExtensionContext) {
         this._context = context;
-        this._talkPoints = new Map<string, ITalkpoint>((this._context.workspaceState.get("talkpoints") || []));
+        this._talkPoints = new Map<string, ITalkpoint>((this._context.workspaceState.get('talkpoints') || []));
     }
 
     /**
@@ -180,11 +180,6 @@ export default class CodeTalkController implements vscode.Disposable {
         await this.loadSettings();
 
         this._functionListProvider = new FunctionListProvider();
-
-        this._functionListProvider.onDidChangeTreeData((l) => {
-            console.log(l);
-        });
-
         this._functionListTreeView = vscode.window.createTreeView('codeTalkFunctionList', {
             treeDataProvider: this._functionListProvider
         });
@@ -214,7 +209,7 @@ export default class CodeTalkController implements vscode.Disposable {
                 try {
                     this._errorSoundBuffer = await load(this._errorSettings.customErrorSound);
                 } catch (error) {
-                    vscode.window.showErrorMessage("Failed to load custom sound for Error Detection: " + error);
+                    vscode.window.showErrorMessage('Failed to load custom sound for Error Detection: ' + error);
                 }
             } else {
                 this._errorSoundBuffer = await load(this._defaultErrorBeepSound);
@@ -226,7 +221,7 @@ export default class CodeTalkController implements vscode.Disposable {
                 try {
                     this._tonalTalkpointBuffer = await load(this._talkPointSettings.customBreakpointSound);
                 } catch (error) {
-                    vscode.window.showErrorMessage("Failed to load custom sound for Tonal Talkpoint: " + error);
+                    vscode.window.showErrorMessage('Failed to load custom sound for Tonal Talkpoint: ' + error);
                 }
             } else {
                 this._tonalTalkpointBuffer = await load(this._defaultErrorBeepSound);
@@ -329,7 +324,7 @@ export default class CodeTalkController implements vscode.Disposable {
                 let immediateParent: vscode.DocumentSymbol;
                 for (const symbol of symbols) {
                     const result = this.findImmediateParentOf(position, symbol);
-                    if (result != null) {
+                    if (result) {
                         immediateParent = result;
                         continue;
                     }
@@ -369,14 +364,14 @@ export default class CodeTalkController implements vscode.Disposable {
 
             return parent;
         }
-        return null;
+        return undefined;
     }
 
     /**
      * Saves talkpoints to the workspace storage, so it can be reloaded on the next session.
      */
     private async saveTalkpoints() {
-        await this._context.workspaceState.update("talkpoints", [...this._talkPoints.entries()]);
+        await this._context.workspaceState.update('talkpoints', [...this._talkPoints.entries()]);
     }
 
     /**
@@ -392,7 +387,7 @@ export default class CodeTalkController implements vscode.Disposable {
             vscode.window.showInformationMessage(`Removed ${numTalkpoints} talkpoints from workspace.`);
             this._internalEvents.emit('talkpoints.changed');
         } else {
-            vscode.window.showInformationMessage("There are no talkpoints registered.");
+            vscode.window.showInformationMessage('There are no talkpoints registered.');
         }
     }
 
@@ -458,7 +453,7 @@ export default class CodeTalkController implements vscode.Disposable {
             const state: ITalkpointCreationState = await showTalkpointCreationSteps();
 
             if (state.dismissedEarly) {
-                vscode.window.showWarningMessage("Dismissed talkpoint creation.");
+                vscode.window.showWarningMessage('Dismissed talkpoint creation.');
                 return;
             }
 
@@ -486,7 +481,7 @@ export default class CodeTalkController implements vscode.Disposable {
         if (!this._breakpointsLoaded) {
             const talkpointsByFileLine: Record<string, ITalkpoint> = [...this._talkPoints.entries()]
                 .reduce((map, [_, talkpoint]) => {
-                    map[talkpoint.uri.path + ";" + talkpoint.position.line] = talkpoint;
+                    map[talkpoint.uri.path + ';' + talkpoint.position.line] = talkpoint;
                     return map;
                 }, {});
 
@@ -496,7 +491,7 @@ export default class CodeTalkController implements vscode.Disposable {
                 if (sourceBreakpoint) {
                     const filePath = sourceBreakpoint.location.uri.path;
                     const line = sourceBreakpoint.location.range.start.line;
-                    const talkpoint = talkpointsByFileLine[filePath + ";" + line];
+                    const talkpoint = talkpointsByFileLine[filePath + ';' + line];
                     if (talkpoint) {
                         talkpoint.breakpointId = breakpoint.id;
                         this._talkPoints.set(breakpoint.id, talkpoint);
@@ -551,7 +546,7 @@ export default class CodeTalkController implements vscode.Disposable {
                             (m.body?.reason === 'breakpoint' || m.body?.reason === 'step')) {
 
                             // Get current stack details to be able to find corresponding breakpoint
-                            const stack = await session.customRequest("stackTrace", { threadId: m.body.threadId, startFrame: 0 });
+                            const stack = await session.customRequest('stackTrace', { threadId: m.body.threadId, startFrame: 0 });
                             const currentFrame = stack.stackFrames[0];
 
                             const sourceBreakpoints = vscode.debug.breakpoints.map(b => b as vscode.SourceBreakpoint);
@@ -570,37 +565,37 @@ export default class CodeTalkController implements vscode.Disposable {
                                     let message: string;
 
                                     switch (talkpoint.type) {
-                                        case "Tonal":
+                                        case 'Tonal':
                                             play(this._tonalTalkpointBuffer, {}, undefined);
                                             break;
-                                        case "Text":
-                                            message = "Text Talkpoint Hit: " + talkpoint.text;
+                                        case 'Text':
+                                            message = 'Text Talkpoint Hit: ' + talkpoint.text;
                                             vscode.window.showInformationMessage(message);
                                             logToOutputChannel(this._outputChannel, message);
                                             break;
-                                        case "Expression":
+                                        case 'Expression':
                                             const expressionTalkpoint = talkpoint;
                                             try {
-                                                const response = await session.customRequest("evaluate", {
+                                                const response = await session.customRequest('evaluate', {
                                                     expression: expressionTalkpoint.expression,
                                                     frameId: currentFrame.id // run in the scope of the most recent local stack frame
                                                 });
-                                                message = "Expression Talkpoint Hit: " + response.result;
+                                                message = 'Expression Talkpoint Hit: ' + response.result;
                                             } catch (error) {
                                                 console.log(error);
-                                                message = "Expression Talkpoint Invalid: " + error;
+                                                message = 'Expression Talkpoint Invalid: ' + error;
                                             }
                                             vscode.window.showInformationMessage(message);
                                             logToOutputChannel(this._outputChannel, message);
                                             break;
                                         default:
-                                            vscode.window.showErrorMessage("Unrecognized Talkpoint: " + talkpoint);
+                                            vscode.window.showErrorMessage('Unrecognized Talkpoint: ' + talkpoint);
                                             break;
                                     }
 
                                     // Don't pause on breakpoint if shouldContinue is true
                                     if (talkpoint.shouldContinue) {
-                                        session.customRequest("continue", { threadId: m.body.threadId });
+                                        session.customRequest('continue', { threadId: m.body.threadId });
                                     }
                                 }
                             })
