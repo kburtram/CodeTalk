@@ -40,7 +40,7 @@ export default class CodeTalkController implements vscode.Disposable {
     private _talkPointDecoration = vscode.window.createTextEditorDecorationType({
         isWholeLine: true,
         after: {
-            contentText: "   Talkpoint Enabled".replace(/ /g, '\u00a0'),
+            contentText: '   Talkpoint Enabled'.replace(/ /g, '\u00a0'),
             fontStyle: 'normal',
             fontWeight: 'normal',
             color: new vscode.ThemeColor('editorLineNumber.foreground'),
