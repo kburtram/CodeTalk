@@ -6,6 +6,7 @@
 'use strict';
 
 import { FunctionInfo, FunctionListProvider } from '../controls/functionListProvider';
+import { FunctionListNode } from '../controls/functionListNode';
 import { IErrorSettings, IExpressionTalkpoint, ITalkpoint, ITalkpointSettings, ITextTalkpoint, ITonalTalkpoint } from '../models/interfaces';
 import { asyncFilter } from '../models/utils';
 import { ITalkpointCreationState, showTalkpointCreationSteps } from '../models/talkpointMenu';
@@ -25,6 +26,7 @@ export default class CodeTalkController implements vscode.Disposable {
     private _internalEvents: events.EventEmitter = new events.EventEmitter();
     private _initialized: boolean = false;
     private _functionListProvider: FunctionListProvider;
+    private _functionListTreeView: vscode.TreeView<any>;
 
     private _errorSettings : IErrorSettings;
     private _defaultErrorBeepSound : string =`${__dirname}/../assets/errorBeep.wav`;
@@ -53,7 +55,7 @@ export default class CodeTalkController implements vscode.Disposable {
      */
     constructor(context: vscode.ExtensionContext) {
         this._context = context;
-        this._talkPoints = new Map<string, ITalkpoint>((this._context.workspaceState.get("talkpoints") || []));
+        this._talkPoints = new Map<string, ITalkpoint>((this._context.workspaceState.get('talkpoints') || []));
     }
 
     /**
@@ -62,6 +64,16 @@ export default class CodeTalkController implements vscode.Disposable {
     public registerCommand(command: string): void {
         const self = this;
         this._context.subscriptions.push(vscode.commands.registerCommand(command, () => self._event.emit(command)));
+    }
+
+    /**
+     * Helper method to setup command registrations with arguments
+     */
+     private registerCommandWithArgs(command: string): void {
+        const self = this;
+        this._context.subscriptions.push(vscode.commands.registerCommand(command, (args: any) => {
+            self._event.emit(command, args);
+        }));
     }
 
     /**
@@ -103,18 +115,14 @@ export default class CodeTalkController implements vscode.Disposable {
 
             // Can be run even if no text editor is open, clears all talkpoints
             this.registerCommand('codeTalk.removeAllTalkpoints');
+            this.registerCommandWithArgs('codeTalk.functionListNavigate');
 
             this._event.on('codeTalk.showFunctions', async(textEditor: vscode.TextEditor) => {
-                // TO-DO
-                try {
-                    let symbols : vscode.DocumentSymbol[] =
-                        await vscode.commands.executeCommand('vscode.executeDocumentSymbolProvider', textEditor.document.uri);
-                    console.log(symbols);
-                } catch (error) {
-                    console.log(error);
-                }
-
                 this.handleShowFunctions();
+            });
+
+            this._event.on('codeTalk.functionListNavigate', async(node: FunctionListNode) => {
+                this._functionListProvider.navigateToFunction(node);
             });
 
             this._event.on('codeTalk.showContext', async(textEditor: vscode.TextEditor) => {
@@ -165,9 +173,13 @@ export default class CodeTalkController implements vscode.Disposable {
 
         this._functionListProvider = new FunctionListProvider();
 
-        this._context.subscriptions.push(
-            vscode.window.registerTreeDataProvider('codeTalkFunctionList', this._functionListProvider)
-        );
+        this._functionListProvider.onDidChangeTreeData((l) => {
+            console.log(l);
+        });
+
+        this._functionListTreeView = vscode.window.createTreeView('codeTalkFunctionList', {
+            treeDataProvider: this._functionListProvider });
+        this._context.subscriptions.push(this._functionListTreeView);
 
         this._initialized = true;
         return true;
@@ -282,7 +294,10 @@ export default class CodeTalkController implements vscode.Disposable {
                 let functionList: FunctionInfo[] = [];
                 this.buildFunctionList(symbols, functionList);
                 functionList.sort((a, b) => (a.line > b.line) ? 1 : -1)
-                this._functionListProvider.updateFunctionList(functionList);
+                this._functionListProvider.updateFunctionList(
+                    this._functionListTreeView,
+                    ownerUri.toString(true),
+                    functionList);
             }
         }
         return true;

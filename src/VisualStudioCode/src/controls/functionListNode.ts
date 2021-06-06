@@ -4,6 +4,7 @@
  * ------------------------------------------------------------------------------------------ */
 
 import * as vscode from 'vscode';
+import { FunctionInfo } from './functionListProvider';
 
 /**
  * Empty Node shown when no queries are available
@@ -23,20 +24,23 @@ export class EmptyFunctionListNode extends vscode.TreeItem {
  */
 export class FunctionListNode extends vscode.TreeItem {
 
-    private static readonly contextValue = 'queryHistoryNode';
+    private static readonly contextValue = 'functionListNode';
 
     constructor(
-        label: string,
-        tooltip: string
+        private _uri: string,
+        private _functionInfo: FunctionInfo
     ) {
-        super(label, vscode.TreeItemCollapsibleState.None);
-        this.tooltip = tooltip;
+        super(_functionInfo.spokenText, vscode.TreeItemCollapsibleState.None);
+        this.tooltip = _functionInfo.displayText;
         this.contextValue = FunctionListNode.contextValue;
     }
 
     /** Getters */
-    public get functionNodeLabel(): string {
-        const label = typeof this.label === 'string' ? this.label : this.label.label;
-        return label;
+    public get functionInfo() {
+        return this._functionInfo;
+    }
+
+    public get uri() {
+        return this._uri;
     }
 }

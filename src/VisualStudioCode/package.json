@@ -114,14 +114,23 @@
         "command": "codeTalk.removeAllTalkpoints",
         "title": "Remove All Talkpoints",
         "category": "Code Talk"
-      }
+      },
+      {
+				"command": "codeTalk.functionListNavigate",
+				"title": "Navigate To",
+        "category": "Code Talk",
+        "icon": {
+					"light": "images/light/edit.svg",
+					"dark": "images/dark/edit.svg"
+				}
+			}
     ],
     "viewsContainers": {
       "activitybar": [
         {
           "id": "codeTalk",
           "title": "Code Talk",
-          "icon": "./images/server_page_inverse.svg"
+          "icon": "./images/CodeTalkActionBar.svg"
         }
       ]
     },
@@ -177,6 +186,16 @@
         "when": "editorTextFocus"
       }
     ],
+    "menus": {
+			"view/item/context": [
+				{
+					"command": "codeTalk.functionListNavigate",
+					"group": "inline",
+          "when": "view == codeTalkFunctionList"
+
+				}
+			]
+		},
     "configuration": {
       "type": "object",
       "title": "Code Talk",

@@ -23,17 +23,18 @@ export class FunctionListProvider implements vscode.TreeDataProvider<any> {
     constructor() {
     }
 
-    public updateFunctionList(functions: FunctionInfo[]) {
+    public updateFunctionList(treeView: vscode.TreeView<any>, uri: string, functions: FunctionInfo[]): void {
         if (functions && functions.length > 0) {
             this._functionListNodes = [];
             for (let i = 0; i < functions.length; ++i) {
-                let node = new FunctionListNode(functions[i].spokenText, functions[i].displayText);
+                let node = new FunctionListNode(uri, functions[i]);
                 this._functionListNodes.push(node);
             }
         } else {
             this._functionListNodes = [new EmptyFunctionListNode()];
         }
         this._onDidChangeTreeData.fire(undefined);
+        treeView.reveal(this._functionListNodes[0], { focus: true });
     }
 
     clearAll(): void {
@@ -56,10 +57,41 @@ export class FunctionListProvider implements vscode.TreeDataProvider<any> {
         return this._functionListNodes;
     }
 
+    public getParent(element: FunctionListNode): FunctionListNode {
+		return undefined;
+	}
+
     /**
      * Getters
      */
     public get functionListNodes(): vscode.TreeItem[] {
         return this._functionListNodes;
+    }
+
+    /**
+     * Sets a selection range in the editor for this query
+     * @param selection The selection range to select
+     */
+     public async navigateToFunction(node: FunctionListNode): Promise<void> {
+        if (!node || !node.functionInfo) {
+            return;
+        }
+        let line = node.functionInfo.line;
+        const docExists = vscode.workspace.textDocuments.find(textDoc => textDoc.uri.toString(true) === node.uri);
+        if (docExists) {
+            let column = vscode.ViewColumn.One;
+            const doc = await vscode.workspace.openTextDocument(vscode.Uri.parse(node.uri));
+            const activeTextEditor = vscode.window.activeTextEditor;
+            if (activeTextEditor) {
+                column = activeTextEditor.viewColumn;
+            }
+            const correspondingPosition = new vscode.Range(new vscode.Position(line, 0), new vscode.Position(line, 0))
+            await vscode.window.showTextDocument(doc, {
+                viewColumn: column,
+                preserveFocus: false,
+                preview: false,
+                selection: correspondingPosition
+            });
+        }
     }
 }
