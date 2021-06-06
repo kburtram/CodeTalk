@@ -329,7 +329,7 @@ export default class CodeTalkController implements vscode.Disposable {
                 kind: symbols[i].kind,
                 displayText: displayText,
                 spokenText: spokenText,
-                line: symbols[i].range.start.line + 1,
+                line: symbols[i].range.start.line,
             };
             result.push(current);
         }
@@ -413,7 +413,10 @@ export default class CodeTalkController implements vscode.Disposable {
                 }
 
                 if (immediateParent) {
-                    editor.selections = [new vscode.Selection(immediateParent.range.start, immediateParent.range.start)];
+                    // editor.selections = [new vscode.Selection(immediateParent.range.start, immediateParent.range.start)];
+                    vscode.commands.executeCommand('vscode.open', activeUri, {
+                        selection: new vscode.Range(immediateParent.range.start, immediateParent.range.start)
+                    });
                     vscode.window.showInformationMessage(`Moved to parent ${vscode.SymbolKind[immediateParent.kind]} ${immediateParent.name} at line ${(immediateParent.range.start.line + 1)}`);
                 } else {
                     vscode.window.showInformationMessage('No parent found.');
