@@ -36,9 +36,9 @@ export class TalkpointListProvider implements vscode.TreeDataProvider<ITalkpoint
         } else {
             this._currentTalkpointNodes = [new EmptyTalkpointNode()];
         }
-        console.log("Updating talkpoints")
-        console.log(this._currentTalkpointNodes.length)
+
         this._onDidChangeTreeData.fire();
+
         if (setFocus) {
             treeView.reveal(this._currentTalkpointNodes[0], { focus: setFocus });
         }

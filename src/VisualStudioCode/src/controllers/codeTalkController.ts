@@ -159,6 +159,9 @@ export default class CodeTalkController implements vscode.Disposable {
                     this.handleShowFunctions(editor, false);
                     this.handleShowContext(editor, false);
                 }),
+                vscode.window.onDidChangeTextEditorSelection(debounce(
+                    (e: vscode.TextEditorSelectionChangeEvent) =>
+                        this.handleShowContext(e.textEditor, false), 2000)),
                 vscode.workspace.onDidOpenTextDocument(this.renderTalkpointDecorations.bind(this)),
                 vscode.workspace.onDidChangeTextDocument(this.renderTalkpointDecorations.bind(this)),
                 vscode.debug.onDidChangeBreakpoints(this.handleChangeBreakpointsEvent.bind(this)),
@@ -479,8 +482,6 @@ export default class CodeTalkController implements vscode.Disposable {
 
     private async handleShowAllTalkpoints(setFocus: boolean = true) {
         const talkpointInfoList : TalkpointInfo[] = [];
-        console.log("Handle show all talkpoints called")
-        console.log(this._talkPoints.size);
         for (const [id, talkpoint] of this._talkPoints) {
             const filePathParts = talkpoint.uri.fsPath?.split(/\\|\//);
             const fileName = filePathParts[filePathParts.length - 1]
