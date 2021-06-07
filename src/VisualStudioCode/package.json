@@ -127,7 +127,8 @@
         "icon": {
 					"light": "images/light/edit.svg",
 					"dark": "images/dark/edit.svg"
-				}
+				},
+        "enablement": "view == codeTalkFunctionList"
 			}
     ],
     "viewsContainers": {
@@ -183,26 +184,23 @@
       {
         "command": "workbench.action.problems.focus",
         "key": "ctrl+1 ctrl+e",
-        "mac": "cmd+1 cmd+e",
-        "when": "editorTextFocus"
+        "mac": "cmd+1 cmd+e"
       },
       {
         "command": "codeTalk.addTalkpoint",
         "key": "ctrl+1 ctrl+b",
         "mac": "cmd+1 cmd+b",
-        "when": "editorTextFocus"
+        "when": "editorTextFocus && !editorReadonly"
       },
       {
         "command": "codeTalk.showAllTalkpoints",
         "key": "ctrl+1 ctrl+t",
-        "mac": "cmd+1 cmd+t",
-        "when": "editorTextFocus"
+        "mac": "cmd+1 cmd+t"
       },
       {
         "command": "codeTalk.removeAllTalkpoints",
         "key": "ctrl+1 ctrl+d",
-        "mac": "cmd+1 cmd+d",
-        "when": "editorTextFocus"
+        "mac": "cmd+1 cmd+d"
       }
     ],
     "menus": {

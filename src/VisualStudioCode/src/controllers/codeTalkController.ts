@@ -313,7 +313,7 @@ export default class CodeTalkController implements vscode.Disposable {
         this._internalEvents.emit('talkpoints.changed');
     }
 
-    private async handleShowFunctions(editor: vscode.TextEditor, setFocus: boolean): Promise<boolean> {
+    private async handleShowFunctions(editor: vscode.TextEditor, setFocus: boolean = true): Promise<boolean> {
         const ownerUri = editor?.document?.uri;
         if (ownerUri) {
             let symbols: vscode.DocumentSymbol[] = await vscode.commands.executeCommand(
@@ -549,7 +549,6 @@ export default class CodeTalkController implements vscode.Disposable {
     private async handleAddTalkpoint(editor: vscode.TextEditor) {
         const activeUri: vscode.Uri = editor?.document?.uri;
         const selection: vscode.Position = editor?.selection?.anchor;
-
         if (activeUri && selection) {
 
             const existingBreakpoints = vscode.debug.breakpoints
