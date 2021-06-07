@@ -111,6 +111,11 @@
         "category": "Code Talk"
       },
       {
+        "command": "codeTalk.showAllTalkpoints",
+        "title": "Show All Talkpoints",
+        "category": "Code Talk"
+      },
+      {
         "command": "codeTalk.removeAllTalkpoints",
         "title": "Remove All Talkpoints",
         "category": "Code Talk"
@@ -143,6 +148,10 @@
         {
           "id": "codeTalkCurrentContext",
           "name": "Current Context"
+        },
+        {
+          "id": "codeTalkTalkpointList",
+          "name": "Talkpoint List"
         }
       ]
     },
@@ -181,6 +190,12 @@
         "command": "codeTalk.addTalkpoint",
         "key": "ctrl+1 ctrl+b",
         "mac": "cmd+1 cmd+b",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "codeTalk.showAllTalkpoints",
+        "key": "ctrl+1 ctrl+t",
+        "mac": "cmd+1 cmd+t",
         "when": "editorTextFocus"
       },
       {

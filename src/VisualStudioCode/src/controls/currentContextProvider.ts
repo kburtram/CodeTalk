@@ -26,7 +26,7 @@ export class CurrentContextProvider implements vscode.TreeDataProvider<ContextNo
     constructor() {
     }
 
-    public updateCurrentContext(treeView: vscode.TreeView<ContextNode>, uri: vscode.Uri, context: ContextInfo[]) {
+    public updateCurrentContext(treeView: vscode.TreeView<ContextNode>, uri: vscode.Uri, context: ContextInfo[], setFocus: boolean) {
         if (context && context.length > 0) {
             this._currentContextNodes = [];
             for (let i = 0; i < context.length; ++i) {
@@ -39,7 +39,9 @@ export class CurrentContextProvider implements vscode.TreeDataProvider<ContextNo
             this._currentContextNodes = [new EmptyCurrentContextNode()];
         }
         this._onDidChangeTreeData.fire(undefined);
-        treeView.reveal(this._currentContextNodes[this._currentContextNodes.length - 1], { focus: true, expand: true });
+        if (setFocus) {
+            treeView.reveal(this._currentContextNodes[this._currentContextNodes.length - 1], { focus: setFocus, expand: true });
+        }
     }
 
     clearAll(): void {
