@@ -119,17 +119,7 @@
         "command": "codeTalk.removeAllTalkpoints",
         "title": "Remove All Talkpoints",
         "category": "Code Talk"
-      },
-      {
-				"command": "codeTalk.functionListNavigate",
-				"title": "Navigate To",
-        "category": "Code Talk",
-        "icon": {
-					"light": "images/light/edit.svg",
-					"dark": "images/dark/edit.svg"
-				},
-        "enablement": "view == codeTalkFunctionList"
-			}
+      }
     ],
     "viewsContainers": {
       "activitybar": [

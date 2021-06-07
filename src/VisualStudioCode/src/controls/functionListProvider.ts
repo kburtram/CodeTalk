@@ -23,7 +23,7 @@ export class FunctionListProvider implements vscode.TreeDataProvider<any> {
     constructor() {
     }
 
-    public updateFunctionList(treeView: vscode.TreeView<any>, uri: string,
+    public updateFunctionList(treeView: vscode.TreeView<any>, uri: vscode.Uri,
             functions: FunctionInfo[], setFocus: boolean): void {
         if (functions && functions.length > 0) {
             let currentLine: number = 0;
@@ -67,11 +67,6 @@ export class FunctionListProvider implements vscode.TreeDataProvider<any> {
     }
 
     public getTreeItem(node: FunctionListNode): FunctionListNode {
-        node.command = {
-            command: 'codeTalk.functionListNavigate',
-            title: "Navigate To Symbol",
-            arguments: [node]
-         };
         return node;
     }
 
@@ -91,32 +86,5 @@ export class FunctionListProvider implements vscode.TreeDataProvider<any> {
      */
     public get functionListNodes(): vscode.TreeItem[] {
         return this._functionListNodes;
-    }
-
-    /**
-     * Sets a selection range in the editor for this query
-     * @param selection The selection range to select
-     */
-     public async navigateToFunction(node: FunctionListNode): Promise<void> {
-        if (!node || !node.functionInfo) {
-            return;
-        }
-        let line = node.functionInfo.line;
-        const docExists = vscode.workspace.textDocuments.find(textDoc => textDoc.uri.toString(true) === node.uri);
-        if (docExists) {
-            let column = vscode.ViewColumn.One;
-            const doc = await vscode.workspace.openTextDocument(vscode.Uri.parse(node.uri));
-            const activeTextEditor = vscode.window.activeTextEditor;
-            if (activeTextEditor) {
-                column = activeTextEditor.viewColumn;
-            }
-            const correspondingPosition = new vscode.Range(new vscode.Position(line, 0), new vscode.Position(line, 0))
-            await vscode.window.showTextDocument(doc, {
-                viewColumn: column,
-                preserveFocus: false,
-                preview: false,
-                selection: correspondingPosition
-            });
-        }
     }
 }

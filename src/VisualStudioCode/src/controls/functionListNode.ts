@@ -27,13 +27,20 @@ export class FunctionListNode extends vscode.TreeItem {
     private static readonly contextValue = 'functionListNode';
 
     constructor(
-        private _uri: string,
+        private _uri: vscode.Uri,
         private _functionInfo: FunctionInfo
     ) {
         super(_functionInfo.spokenText, vscode.TreeItemCollapsibleState.None);
         this.tooltip = _functionInfo.displayText;
         this.iconPath = new vscode.ThemeIcon("wrench");
         this.contextValue = FunctionListNode.contextValue;
+        this.command = {
+            title: _functionInfo.displayText,
+            command: 'vscode.open',
+            arguments: [_uri, {
+                    selection: new vscode.Range(new vscode.Position(_functionInfo.line, 0), new vscode.Position(_functionInfo.line, 0)),
+                }],
+        };
     }
 
     /** Getters */
@@ -41,7 +48,7 @@ export class FunctionListNode extends vscode.TreeItem {
         return this._functionInfo;
     }
 
-    public get uri() {
+    public get uri(): vscode.Uri {
         return this._uri;
     }
 }

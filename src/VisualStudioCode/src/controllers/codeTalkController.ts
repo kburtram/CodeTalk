@@ -8,7 +8,6 @@
 import { FunctionInfo, FunctionListProvider } from '../controls/functionListProvider';
 import { ContextInfo, CurrentContextProvider } from '../controls/currentContextProvider';
 import { TalkpointInfo, TalkpointListProvider } from '../controls/talkpointListProvider';
-import { FunctionListNode } from '../controls/functionListNode';
 import { IErrorSettings, ITalkpoint, ITalkpointSettings } from '../models/interfaces';
 import { asyncFilter, createOutputChannel, logToOutputChannel } from '../models/utils';
 import { ITalkpointCreationState, showTalkpointCreationSteps } from '../models/talkpointMenu';
@@ -125,7 +124,6 @@ export default class CodeTalkController implements vscode.Disposable {
             // Can be run even if no text editor is open, clears all talkpoints
             this.registerCommand('codeTalk.showAllTalkpoints');
             this.registerCommand('codeTalk.removeAllTalkpoints');
-            this.registerCommandWithArgs('codeTalk.functionListNavigate');
 
             this._event.on('codeTalk.showContext', this.handleShowContext.bind(this));
             this._event.on('codeTalk.showFunctions', this.handleShowFunctions.bind(this));
@@ -133,9 +131,6 @@ export default class CodeTalkController implements vscode.Disposable {
             this._event.on('codeTalk.addTalkpoint', this.handleAddTalkpoint.bind(this));
             this._event.on('codeTalk.showAllTalkpoints', this.handleShowAllTalkpoints.bind(this));
             this._event.on('codeTalk.removeAllTalkpoints', this.handleRemoveAllTalkpoints.bind(this));
-            this._event.on('codeTalk.functionListNavigate', async (node: FunctionListNode) => {
-                this._functionListProvider.navigateToFunction(node);
-            });
 
             this._internalEvents.on('talkpoints.changed', debounce(async () => {
                 this.saveTalkpoints(); // don't need to block on save, even though this returns promise
@@ -325,7 +320,7 @@ export default class CodeTalkController implements vscode.Disposable {
                 functionList.sort((a, b) => (a.line > b.line) ? 1 : -1)
                 this._functionListProvider.updateFunctionList(
                     this._functionListTreeView,
-                    ownerUri.toString(true),
+                    ownerUri,
                     functionList,
                     setFocus);
             }
