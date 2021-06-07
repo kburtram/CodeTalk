@@ -91,6 +91,16 @@
   "contributes": {
     "commands": [
       {
+        "command": "codeTalk.showSummary",
+        "title": "Show Code Summary",
+        "category": "Code Talk"
+      },
+      {
+        "command": "codeTalk.showErrors",
+        "title": "Show Errors",
+        "category": "Code Talk"
+      },
+      {
         "command": "codeTalk.showFunctions",
         "title": "Show Functions",
         "category": "Code Talk"
@@ -148,7 +158,7 @@
     },
     "keybindings": [
       {
-        "command": "outline.focus",
+        "command": "codeTalk.showSummary",
         "key": "ctrl+1 ctrl+m",
         "mac": "cmd+1 cmd+m",
         "when": "editorTextFocus"
@@ -172,7 +182,7 @@
         "when": "editorTextFocus"
       },
       {
-        "command": "workbench.action.problems.focus",
+        "command": "codeTalk.showErrors",
         "key": "ctrl+1 ctrl+e",
         "mac": "cmd+1 cmd+e"
       },

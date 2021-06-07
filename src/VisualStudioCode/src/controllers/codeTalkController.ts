@@ -122,8 +122,17 @@ export default class CodeTalkController implements vscode.Disposable {
             this.registerTextEditorCommand('codeTalk.addTalkpoint');
 
             // Can be run even if no text editor is open, clears all talkpoints
+            this.registerCommand('codeTalk.showSummary');
+            this.registerCommand('codeTalk.showErrors');
             this.registerCommand('codeTalk.showAllTalkpoints');
             this.registerCommand('codeTalk.removeAllTalkpoints');
+
+            this._event.on('codeTalk.showSummary', () => {
+                vscode.commands.executeCommand('outline.focus');
+            });
+            this._event.on('codeTalk.showErrors', () => {
+                vscode.commands.executeCommand('workbench.action.problems.focus');
+            });
 
             this._event.on('codeTalk.showContext', this.handleShowContext.bind(this));
             this._event.on('codeTalk.showFunctions', this.handleShowFunctions.bind(this));
