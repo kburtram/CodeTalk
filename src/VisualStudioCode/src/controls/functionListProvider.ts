@@ -46,13 +46,13 @@ export class FunctionListProvider implements vscode.TreeDataProvider<any> {
             }
             this._onDidChangeTreeData.fire(undefined);
             if (setFocus) {
-                treeView.reveal(selectedNode, { focus: setFocus });
+                treeView.reveal(selectedNode, { focus: setFocus, select: true });
             }
         } else {
             this._functionListNodes = [new EmptyFunctionListNode()];
             this._onDidChangeTreeData.fire(undefined);
             if (setFocus) {
-                treeView.reveal(this._functionListNodes[0], { focus: setFocus });
+                treeView.reveal(this._functionListNodes[0], { focus: setFocus, select: true });
             }
         }
     }

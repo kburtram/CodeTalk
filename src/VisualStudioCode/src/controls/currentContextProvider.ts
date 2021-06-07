@@ -40,7 +40,7 @@ export class CurrentContextProvider implements vscode.TreeDataProvider<ContextNo
         }
         this._onDidChangeTreeData.fire(undefined);
         if (setFocus) {
-            treeView.reveal(this._currentContextNodes[this._currentContextNodes.length - 1], { focus: setFocus, expand: true });
+            treeView.reveal(this._currentContextNodes[this._currentContextNodes.length - 1], { focus: setFocus, select: true, expand: true });
         }
     }
 

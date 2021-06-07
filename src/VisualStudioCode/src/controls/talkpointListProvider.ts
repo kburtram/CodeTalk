@@ -40,7 +40,7 @@ export class TalkpointListProvider implements vscode.TreeDataProvider<ITalkpoint
         this._onDidChangeTreeData.fire();
 
         if (setFocus) {
-            treeView.reveal(this._currentTalkpointNodes[0], { focus: setFocus });
+            treeView.reveal(this._currentTalkpointNodes[0], { focus: setFocus, select: true});
         }
     }
 
