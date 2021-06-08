@@ -1,5 +1,7 @@
 .vscode/**
 src/**
+out/**
+node_modules/**
 .gitignore
 .yarnrc
 **/tsconfig.json

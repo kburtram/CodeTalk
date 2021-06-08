@@ -6,7 +6,7 @@
             "type": "npm",
             "script": "compile",
             "label": "run: compile",
-            "detail": "node --max_old_space_size=8192 ./node_modules/gulp/bin/gulp.js compile",
+            "detail": "webpack --mode=development",
             "group": {
                 "kind": "build",
                 "isDefault": true

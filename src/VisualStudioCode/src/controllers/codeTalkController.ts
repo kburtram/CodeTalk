@@ -15,8 +15,8 @@ import { debounce } from 'underscore';
 
 import * as events from 'events';
 import * as vscode from 'vscode';
-import play = require('audio-play');
-import load = require('audio-loader');
+
+import sound from "sound-play";
 
 /**
  * The main controller class that initializes the extension
@@ -35,13 +35,14 @@ export default class CodeTalkController implements vscode.Disposable {
     private _talkpointListTreeView: vscode.TreeView<any>;
 
     private _errorSettings: IErrorSettings;
-    private _defaultErrorBeepSound: string = `${__dirname}/../assets/errorBeep.wav`;
-    private _errorSoundBuffer: AudioBuffer;
+    private _defaultErrorBeepSound: string = `${__dirname}/assets/errorBeep.wav`;
+    private _customErrorSound: string;
     private _errorDiagnosticsListener: vscode.Disposable;
     private _previousDiagnostics: vscode.Diagnostic[] = [];
 
     private _talkPointSettings: ITalkpointSettings;
-    private _tonalTalkpointBuffer: AudioBuffer;
+    private _defaultTalkpointSound: string = `${__dirname}/assets/errorBeep.wav`;
+    private _customTalkpointSound: string;
     private _talkPoints: Map<string, ITalkpoint>;
     private _talkPointDecoration = vscode.window.createTextEditorDecorationType({
         isWholeLine: true,
@@ -164,15 +165,15 @@ export default class CodeTalkController implements vscode.Disposable {
                     this.handleShowContext(editor, false);
                 }),
                 vscode.window.onDidChangeTextEditorSelection(debounce(
-                    (e: vscode.TextEditorSelectionChangeEvent) =>
-                        this.handleShowContext(e.textEditor, false), 2000)),
+                    (e: vscode.TextEditorSelectionChangeEvent) => {
+                        this.handleShowFunctions(e.textEditor, false);
+                        this.handleShowContext(e.textEditor, false);
+                    }, 1000)),
                 vscode.workspace.onDidOpenTextDocument(this.renderTalkpointDecorations.bind(this)),
                 vscode.workspace.onDidChangeTextDocument(this.renderTalkpointDecorations.bind(this)),
                 vscode.debug.onDidChangeBreakpoints(this.handleChangeBreakpointsEvent.bind(this)),
                 vscode.debug.registerDebugAdapterTrackerFactory('*', this.createDebugAdapterTrackerFactory()),
             );
-
-            this.handleShowFunctions(vscode.window.activeTextEditor, false);
             return true;
         }
     }
@@ -230,27 +231,11 @@ export default class CodeTalkController implements vscode.Disposable {
         }
 
         if (!prevErrorSettings || prevErrorSettings.customErrorSound != this._errorSettings.customErrorSound) {
-            if (this._errorSettings.customErrorSound) {
-                try {
-                    this._errorSoundBuffer = await load(this._errorSettings.customErrorSound);
-                } catch (error) {
-                    vscode.window.showErrorMessage('Failed to load custom sound for Error Detection: ' + error);
-                }
-            } else {
-                this._errorSoundBuffer = await load(this._defaultErrorBeepSound);
-            }
+            this._customErrorSound =this._errorSettings.customErrorSound;
         }
 
         if (!prevTalkPointSettings || prevTalkPointSettings?.customBreakpointSound != this._talkPointSettings.customBreakpointSound) {
-            if (this._talkPointSettings.customBreakpointSound) {
-                try {
-                    this._tonalTalkpointBuffer = await load(this._talkPointSettings.customBreakpointSound);
-                } catch (error) {
-                    vscode.window.showErrorMessage('Failed to load custom sound for Tonal Talkpoint: ' + error);
-                }
-            } else {
-                this._tonalTalkpointBuffer = await load(this._defaultErrorBeepSound);
-            }
+            this._customTalkpointSound = this._talkPointSettings.customBreakpointSound;
         }
     }, 2000);
 
@@ -260,12 +245,12 @@ export default class CodeTalkController implements vscode.Disposable {
             if (symbol.kind === vscode.SymbolKind.Function
                 || symbol.kind === vscode.SymbolKind.Method) {
                 let displayText = symbol.name + ' at line ' + (symbol.range.start.line + 1);
-                functionList.push(<FunctionInfo>{
+                functionList.push({
                     name: symbol.name,
                     displayText: displayText,
                     spokenText: displayText,
                     line: symbol.range.start.line
-                });
+                } as FunctionInfo);
             }
             if (symbol.children && symbol.children.length > 0) {
                 this.buildFunctionList(symbol.children, functionList);
@@ -287,7 +272,10 @@ export default class CodeTalkController implements vscode.Disposable {
                             .filter((d) => d.severity !==  vscode.DiagnosticSeverity.Hint);
 
                         if (currentDiagnostics.length > this._previousDiagnostics?.length) {
-                            play(this._errorSoundBuffer, {}, undefined);
+                            var audioFile = this._customErrorSound || this._defaultErrorBeepSound;
+                            sound.play(audioFile).catch((error) => {
+                                vscode.window.showErrorMessage("Could not play configured error sound: " + error)
+                            });
                         }
                         this._previousDiagnostics = currentDiagnostics;
                     }
@@ -491,8 +479,8 @@ export default class CodeTalkController implements vscode.Disposable {
             const fileName = filePathParts[filePathParts.length - 1]
             const talkpointInfo : TalkpointInfo = {
                 name: fileName, // replace with file name
-                displayText: `${fileName}: ${talkpoint.type} Talkpoint at line ${talkpoint.position.line}`,
-                spokenText: `${fileName}: ${talkpoint.type} Talkpoint at line ${talkpoint.position.line}`,
+                displayText: `${fileName}: ${talkpoint.type} Talkpoint at line ${talkpoint.position.line + 1}`,
+                spokenText: `${fileName}: ${talkpoint.type} Talkpoint at line ${talkpoint.position.line + 1}`,
                 talkpoint: talkpoint
             }
             talkpointInfoList.push(talkpointInfo);
@@ -702,15 +690,15 @@ export default class CodeTalkController implements vscode.Disposable {
 
                                     switch (talkpoint.type) {
                                         case 'Tonal':
-                                            play(this._tonalTalkpointBuffer, {}, undefined);
+                                            var audioFile = this._customTalkpointSound || this._defaultTalkpointSound;
+                                            sound.play(audioFile).catch((error) => {
+                                                vscode.window.showErrorMessage("Could not play configured talkpoint sound: " + error)
+                                            });
                                             break;
                                         case 'Text':
                                             message = 'Text Talkpoint Hit: ' + talkpoint.text;
                                             vscode.window.showInformationMessage(message);
                                             logToOutputChannel(this._outputChannel, message);
-                                            vscode.commands.executeCommand('cursorMove', {
-                                                to: "up"
-                                            })
                                             break;
                                         case 'Expression':
                                             const expressionTalkpoint = talkpoint;
@@ -725,9 +713,6 @@ export default class CodeTalkController implements vscode.Disposable {
                                             }
                                             vscode.window.showInformationMessage(message);
                                             logToOutputChannel(this._outputChannel, message);
-                                            vscode.commands.executeCommand('cursorMove', {
-                                                to: "up"
-                                            })
                                             break;
                                         default:
                                             vscode.window.showErrorMessage('Unrecognized Talkpoint: ' + talkpoint);

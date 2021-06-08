@@ -10,7 +10,9 @@
         "allowUnusedLabels": false,
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
-        "rootDir": "."
+        "rootDir": ".",
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
     },
     "exclude": [
         "node_modules"
