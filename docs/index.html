@@ -1,6 +1,6 @@
 <html>
     <head>
-        <title>CSEP 590a - VSCodeTalk Final Project Report</title>
+        <title>CSEP 590a Sp21 - VSCodeTalk Final Project Report</title>
         <style>
             * {
               font-family: sans-serif;
@@ -9,6 +9,10 @@
     </head>
 <body>
     <h1>VSCodeTalk Final Project Report</h1>
+    <h3>CSEP 590a Spring 2021<br />
+    Xinyi Joffre <br />
+    Stacy Chen <br />
+    Karl Burtram <br /></h3>
 
     <h2>Introduction</h2>
 
@@ -55,10 +59,60 @@
     breakpoint events, such as speaking the words 'stopped' or 'continue.' <p />
 
     <h2>Solution</h2>
-    ...
+    VSCodeTalk project helps improve some accessibility use-cases for visually impaired users.  
+    There is a Visual Studio Code extension available that can be manually installed from a VSIX extension 
+    file.  The source code and binary files for this extension are available from the following links.
+
+    <ul>
+        <li>Extension VSIX <a href='https://github.com/kburtram/CodeTalk/releases/download/0.3.0/codetalk-0.3.0.vsix'>
+        https://github.com/kburtram/CodeTalk/releases/download/0.3.0/codetalk-0.3.0.vsix</a></li>
+        <li>Source Code https://github.com/kburtram/CodeTalk/tree/0.3.0</li>
+    </ul>
+
+    The accessibility challenges of i) glanceability, ii) navigability, and iii) real-time alertability
+    have been addressed through the following VSCodeTalk features.
+
+    <ul>
+        <li><b>Function List</b> - displays a list of functions in a source file.</li>
+        <li><b>Current Context</b> - displays context information about current cursor location such as 
+            source code line, the function being edited, and the parent elements.</li>
+        <li><b>Go to Parent</b> - moves the cursor to the parent source code element.</li>
+        <li><b>Talkpoint Debug</b> Information - generates an audio alert when a breakpoint is hit.
+            The alert can be configured to be a tonal, text or an expression audio sound.
+            The talkpoint can be configured to either stop or continue.
+        </li>
+        <li><b>Syntax Error Information</b> - generates an audio alert when a new syntax error 
+            is introduced into a source code file.
+        </li>
+    </ul>
+    
     <h2>Validation</h2>
-    ...
+    The CodeTalk feature set was based on research that involved close collaboration with the BLV community.
+    VSCodeTalk is largely a direct port of these features so we have some validation that the underlying 
+    concepts are sound.  A significant aspect of the validation that we did was to ensure that features 
+    were implemented correctly and that the user experience passed accessibility testing scenarios. <p />
+    
+    The accessibility testings procedures focused on screen-reader audio output and keyboard-only navigation
+    scenarios.  During screen-reader validation we would go systematically through each feature with the NVDA 
+    software enabled.  The spoken text would be compared with the displayed content to confirm that 
+    the output is correct and that sufficient text was read to provide source code context. <p />
+    
+    The keyboard navigation validation scenarios were mostly focused on ensuring the cursor focus could 
+    easily be moved back-and-forth between the editor and the VSCodeTalk feature view windows.  The content 
+    in the views, such as the current context or the function list, has keyboard command handlers to 
+    refocus back to the editor on the ENTER keypress. <p />
+
     <h2>Learnings and future work</h2>
-    ...
+    The next steps for the VSCodeTalk project is to try to merge the Visual Studio Code extension source code upstream to 
+    the <a href='https://github.com/Microsoft/CodeTalk'>https://github.com/Microsoft/CodeTalk</a> repo.  We would
+    then like to collaborate with the CodeTalk project maintainers to help transfer the extension source code to
+    them for a potential release to the Visual Studio Marketplace. <p />
+
+    There were many learning opportunities while implementing the VSCodeTalk project.  A major learning was from
+    trying to understand the software development process for people for visual impairments.  Software development 
+    tools display a large amount of information simultaneously.  And their is a lot of context that must be maintained
+    about the current cursor position in order to understand what modifications are required in a source file.
+    While implementing and testing the VSCodeTalk feature set we tried to mimic these user workflows.  This exercise
+    was a great way to build a better understanding of some of the challenges for BLV users of software development tools. <p />
 </body>
 </html>
