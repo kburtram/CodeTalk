@@ -119,16 +119,25 @@
     refocus back to the editor on the ENTER keypress. <p />
 
     <h2>Learnings and future work</h2>
-    The next steps for the VSCodeTalk project is to try to merge the Visual Studio Code extension source code upstream to 
-    the <a href='https://github.com/Microsoft/CodeTalk'>https://github.com/Microsoft/CodeTalk</a> repo.  We would
-    then like to collaborate with the CodeTalk project maintainers to help transfer the extension source code to
-    them for a potential release to the Visual Studio Marketplace. <p />
-
     There were many learning opportunities while implementing the VSCodeTalk project.  A major learning was from
     trying to understand the software development process for people for visual impairments.  Software development 
     tools display a large amount of information simultaneously.  And their is a lot of context that must be maintained
     about the current cursor position in order to understand what modifications are required in a source file.
     While implementing and testing the VSCodeTalk feature set we tried to mimic these user workflows.  This exercise
     was a great way to build a better understanding of some of the challenges for BLV users of software development tools. <p />
+
+    The next steps for the VSCodeTalk project is to try to merge the Visual Studio Code extension source code upstream to 
+    the <a href='https://github.com/Microsoft/CodeTalk'>https://github.com/Microsoft/CodeTalk</a> repo.  We would
+    then like to collaborate with the CodeTalk project maintainers to help transfer the extension source code to
+    them for a potential release to the Visual Studio Marketplace. <p />
+
+    An additional investigation was conducted into how to make the VS Code built-in Code Outline feature 
+    more accessible.  The Code Outline feature contains much of the same data as the Function List, 
+    Code Summary, and Current Context features.  Code Outline's user experience is not optimized for 
+    accessible use-cases around screen-reader spoken word quality and keyboard-only quick navigation 
+    through source code symbols.  We looked at various was to reorganize the information in Code Outline
+    to better match the CodeTalk data presentations.  The screen-reader user interface metadata was also
+    improved to contain line numbers when describing symbols.  We plan to open a issue on the VS Code
+    repository with suggestions for improvements referencing a PR with our experimental changes. <p />
 </body>
 </html>
