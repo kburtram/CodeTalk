@@ -103,21 +103,48 @@
     <img src='extension_readme.png' width='900px' />
     
     <h2>Validation</h2>
+    
+    <h3>Concept Validation</h3>
     The CodeTalk feature set was based on research that involved close collaboration with the BLV community.
     VSCodeTalk is largely a direct port of these features so we have some validation that the underlying 
     concepts are sound.  A significant aspect of the validation that we did was to ensure that features 
     were implemented correctly and that the user experience passed accessibility testing scenarios. <p />
     
+    <h3>Screen Reader Compatibility Validation</h3>
     The accessibility testings procedures focused on screen-reader audio output and keyboard-only navigation
     scenarios.  During screen-reader validation we would go systematically through each feature with the NVDA 
     software enabled.  The spoken text would be compared with the displayed content to confirm that 
     the output is correct and that sufficient text was read to provide source code context. <p />
     
+    <h3>Keyboard-only Navigation Validation</h3>
     The keyboard navigation validation scenarios were mostly focused on ensuring the cursor focus could 
     easily be moved back-and-forth between the editor and the VSCodeTalk feature view windows.  The content 
     in the views, such as the current context or the function list, has keyboard command handlers to 
     refocus back to the editor on the ENTER keypress. <p />
 
+    <h3>Language Support Validation</h3>
+    We tried our extension with code written in multiple languages including:
+    <ul>
+        <li>CSharp</li>
+        <li>Python</li>
+        <li>Javascript</li>
+        <li>Typescript</li>
+    </ul>
+    
+    This helped ensure that our extension was not coupled to a single language, but could be language agnostic.
+    
+    <h3>User Validation</h3>
+    We met with Venkatesh during office hours to walk through the extension that was built and gathered feedback.<br/>
+    We also shared an early private build of the extension for validation. Feedback included:
+    
+    <ul>
+        <li>Build features in language agnostic way - <b>done</b></li>
+        <li>Add list of talkpoints to keep track of existing talkpoints - <b>done</b></li>
+        <li>Add prompt message when adding a talkpoint - <b>done</b></li>
+        <li>Leave CodeTalk panel with Esc key - <b>done</b></li>
+        <li>Prompt users to install language specific extension if missing - <b>investigating</b></li>
+    </ul>
+    
     <h2>Learnings and future work</h2>
     There were many learning opportunities while implementing the VSCodeTalk project.  A major learning was from
     trying to understand the software development process for people for visual impairments.  Software development 
