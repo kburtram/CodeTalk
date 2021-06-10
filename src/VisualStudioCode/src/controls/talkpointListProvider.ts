@@ -61,7 +61,6 @@ export class TalkpointListProvider implements vscode.TreeDataProvider<ITalkpoint
             this._currentTalkpointNodes.push(new EmptyTalkpointNode());
             return this._currentTalkpointNodes;
         }
-        console.log(this._currentTalkpointNodes.length)
         return this._currentTalkpointNodes;
     }
 
