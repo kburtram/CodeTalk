@@ -123,13 +123,22 @@ export default class CodeTalkController implements vscode.Disposable {
             this.registerTextEditorCommand('codeTalk.addTalkpoint');
 
             // Can be run even if no text editor is open, clears all talkpoints
+            this.registerCommand('codeTalk.navigateBack');
             this.registerCommand('codeTalk.showSummary');
             this.registerCommand('codeTalk.showErrors');
             this.registerCommand('codeTalk.showAllTalkpoints');
             this.registerCommand('codeTalk.removeAllTalkpoints');
 
+            this._event.on('codeTalk.navigateBack', () => {
+                if (vscode.window.activeTextEditor) {
+                    vscode.window.showTextDocument(vscode.window.activeTextEditor?.document);
+                }
+            });
+
             this._event.on('codeTalk.showSummary', () => {
-                vscode.commands.executeCommand('outline.focus');
+                // Calling focus does not actually seem to put keyboard focus there
+                // Bug?
+                vscode.commands.executeCommand('outline.focus')
             });
             this._event.on('codeTalk.showErrors', () => {
                 vscode.commands.executeCommand('workbench.action.problems.focus');
@@ -364,30 +373,30 @@ export default class CodeTalkController implements vscode.Disposable {
                         break;
                     }
                 }
+
+                let contextList = [];
+                if (context.length > 0) {
+                    contextList = this.buildContextInfo(context, position);
+                } else {
+                    contextList = [];
+                }
+
+                // Always start context from current position
+                let text = `Current position at line ${position.line + 1}`;
+                contextList.push({
+                    name: "Current position",
+                    kind: undefined,
+                    displayText: text,
+                    spokenText: text,
+                    line: position.line,
+                });
+
+                this._currentContextProvider.updateCurrentContext(
+                    this._currentContextTreeView,
+                    activeUri,
+                    contextList,
+                    setFocus);
             }
-
-            let contextList = [];
-            if (context.length > 0) {
-                contextList = this.buildContextInfo(context, position);
-            } else {
-                contextList = [];
-            }
-
-            // Always start context from current position
-            let text = `Current position at line ${position.line + 1}`;
-            contextList.push({
-                name: "Current position",
-                kind: undefined,
-                displayText: text,
-                spokenText: text,
-                line: position.line,
-            });
-
-            this._currentContextProvider.updateCurrentContext(
-                this._currentContextTreeView,
-                activeUri,
-                contextList,
-                setFocus);
         }
         return true;
     }

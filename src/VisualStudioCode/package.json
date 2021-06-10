@@ -1,7 +1,7 @@
 {
   "name": "codetalk",
   "displayName": "Code Talk",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Code Talk",
   "publisher": "codetalk",
   "preview": false,
@@ -60,6 +60,12 @@
   },
   "contributes": {
     "commands": [
+      {
+        "command": "codeTalk.navigateBack",
+        "title": "Go Back",
+        "category": "Code Talk",
+        "enablement": "focusedView == codeTalkFunctionList || focusedView == codeTalkCurrentContext || focusedView == codeTalkTalkpointList || focusedView == workbench.panel.markers.view || focusedView == outline"
+      },
       {
         "command": "codeTalk.showSummary",
         "title": "Show Code Summary",
@@ -127,6 +133,11 @@
       ]
     },
     "keybindings": [
+      {
+        "command": "codeTalk.navigateBack",
+        "key": "escape",
+        "when": "focusedView == codeTalkFunctionList || focusedView == codeTalkCurrentContext || focusedView == codeTalkTalkpointList || focusedView == workbench.panel.markers.view || focusedView == outline"
+      },
       {
         "command": "codeTalk.showSummary",
         "key": "ctrl+1 ctrl+m",

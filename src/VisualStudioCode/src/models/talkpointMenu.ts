@@ -56,9 +56,8 @@ export async function showTalkpointCreationSteps() : Promise<ITalkpointCreationS
             title: title,
             step: 1,
             totalSteps: 2,
-            placeholder: "Pick a Talkpoint type.",
+            placeholder: "Select the Talkpoint type.",
             items: talkpointTypes,
-            activeItem: talkpointTypes[0],
             shouldResume: () => Promise.resolve(false),
         }).catch(() => {
             state.dismissedEarly = true;
@@ -133,7 +132,6 @@ export async function showTalkpointCreationSteps() : Promise<ITalkpointCreationS
             totalSteps: 3,
             placeholder: "Behavior when breakpoint is hit?",
             items: shouldContinueItems,
-            activeItem: shouldContinueItems[0],
             shouldResume: () => Promise.resolve(false),
         }).catch(() => {
             state.dismissedEarly = true;
