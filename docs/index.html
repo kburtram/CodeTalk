@@ -1,6 +1,6 @@
 <html>
     <head>
-        <title>CSEP 590a Sp21 - VSCodeTalk Final Project Report</title>
+        <title>CSEP 590 A Sp 21 - VSCodeTalk Final Project Report</title>
         <style>
             * {
               font-family: sans-serif;
@@ -9,11 +9,13 @@
     </head>
 <body>
     <h1>VSCodeTalk Final Project Report</h1>
-    <h3><b>Course:</b> CSEP 590a Spring 2021<br /></h3>
+    <h3><b>Course:</b> CSEP 590 A Spring 2021<br /></h3>
     <h3>Members:
-        <li>Xinyi Joffre</li>
-        <li>Stacy Chen</li>
-        <li>Karl Burtram</li>
+        <ul>
+            <li>Xinyi Joffre</li>
+            <li>Stacy Chen</li>
+            <li>Karl Burtram</li>
+        </ul>
     </h3>
 
     <h2>Introduction</h2>
@@ -21,11 +23,11 @@
     Software developers who are blind or visually impaired find it difficult to use productivity-enhancing IDEs,
     like Visual Studio or Visual Studio Code.  CodeTalk is a Visual Studio extension that was previously released
     to help address these problems by providing accessibility improvements when writing and debugging source code.
-    The core challenge of developing while blind or visually impaired is that these development environments often
-    have highly-complex UI that present large volumes of related content and this content is often dynamically
-    updated to convey state.  The source code content is structurally interrelated, creating significant impediments
-    to efficient navigation, and dynamic updates can either show continuously updated application state or provide
-    context that a user action is required.<p />
+    A core challenge when developing while blind or visually impaired is that these development environments often
+    have highly-complex UI that presents large volumes of related content and this content is often dynamically
+    updated to convey application state.  Source code content is structurally interrelated, creating significant 
+    impediments to efficient navigation, and dynamic updates can either show continuously updated state 
+    or provide context that a user action is required.<p />
 
     VSCodeTalk offers a set of features that address the following categories of usage scenarios i) glanceability, ii) navigability,
     and iii) real-time alertability.  Glanceability is the ability to quickly look at a source code file and ascertain
@@ -34,9 +36,9 @@
     at the desired time.  The VSCodeTalk features implemented in this project help improve these use-cases.<p />
 
     <ul>
-        <li><b>Glanceability</b>, such as Function List, Current Context</li>
-        <li><b>Navigability</b>, such as Function List, Current Context, Go to Parent</li>
-        <li><b>Real-time alertability</b>, such as TalkPoints Debugging Information, Syntax Error Information</li>
+        <li><b>Glanceability</b>, such as Function List and Current Context</li>
+        <li><b>Navigability</b>, such as Function List, Current Context and Go to Parent</li>
+        <li><b>Real-time alertability</b>, such as TalkPoints Debugging Information and Syntax Error Information</li>
     </ul>
 
     Please watch the following video for additional information about VSCodeTalk, including a demo of some of the 
@@ -55,14 +57,14 @@
         https://www.microsoft.com/en-us/research/uploads/prod/2018/04/CodeTalkCHI2018CameraReady.pdf</a>.<p />
 
     The issues that people with visual impairments encounter when using software development environments
-    are of interest to tools providers.  The Visual Studio Code team has embraced several concepts similar 
-    to VSCodeTalk features that make the default product more accessible.  One example is the Code
-    Outline feature that overlaps with the Function List or Code Summary features in many regards.
+    are of interest to software tools vendors.  The Visual Studio Code team has implemented several concepts similar 
+    to VSCodeTalk features that help improve the default product's accessibility.  One example is the Code
+    Outline feature that overlaps with the Function List and Code Summary features in some regards.
     Another example is the debugger which has built-in voice notifications for several
     breakpoint events, such as narrating the words 'stopped' or 'continue.' <p />
 
     <h2>Solution</h2>
-    VSCodeTalk project helps improve some accessibility use-cases for visually impaired users.  
+    VSCodeTalk project helps improve several accessibility use-cases for visually impaired users.  
     There is a Visual Studio Code extension available that can be manually installed from a VSIX extension 
     file.  The source code and binary files for this extension are available from the following links.
 
@@ -77,10 +79,12 @@
 
     <ul>
         <li><b>Function List</b> - displays a list of functions in a source file. <br />
-            <img src='function_list.png' alt='The function list feature in VSCodeTalk' width='270px' /></li>
+            <img src='function_list.png' alt='The function list feature in VSCodeTalk' width='270px'
+                 alt='The function list user interface showing a simple list of functions' /></li>
         <li><b>Current Context</b> - displays context information about current cursor location such as 
             source code line, the function being edited, and the parent elements. <br />
-            <img src='current_context.png' alt='The current context feature in VSCodeTalk' width='270px' /></li>
+            <img src='current_context.png' alt='The current context feature in VSCodeTalk' width='270px' 
+                 alt='The current context user interface showing a hierarchy of source code context'/></li>
         <li><b>Go to Parent</b> - moves the cursor to the parent source code element.</li>
         <li><b>Talkpoint Debug Information</b> - generates an audio alert when a breakpoint is hit.
             The alert can be configured to be a tonal, text, or an expression audio sound.
